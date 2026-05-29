@@ -166,7 +166,7 @@ const handleDelete = async (row: Ingrediente) => {
                     <td className="py-3 pr-4"><Dot color={color} />{estado}</td>
                     <td className="py-3 pr-4">
                       <div className="flex gap-2">
-                        <button onClick={() => openEdit(row)} className="px-3 py-1 rounded" style={{ background: 'rgba(0,0,0,.06)' }}>
+                        <button onClick={() => openEdit(row)} className="px-3 py-1 rounded" style={{ color: 'black', background: '#0000000f' }}>
                           Editar
                         </button>
                         <button onClick={() => handleDelete(row)} className="px-3 py-1 rounded" style={{ background: '#b91c1c', color: '#fff' }}>
