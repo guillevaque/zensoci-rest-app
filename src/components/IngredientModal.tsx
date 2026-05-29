@@ -90,7 +90,7 @@ export default function IngredientModal({ open, title, initial, onClose, onSubmi
           </div>
 
           <div style={{display:'flex', gap:8, justifyContent:'flex-end', marginTop:16}}>
-            <button type="button" onClick={onClose} style={{padding:'8px 12px', borderRadius:8, background:'rgba(0,0,0,.06)'}}>Cancelar</button>
+            <button type="button" onClick={onClose} style={{padding:'8px 12px', color:'black', borderRadius:8, background:'rgba(0,0,0,.06)'}}>Cancelar</button>
             <button type="submit" disabled={saving}
               style={{padding:'8px 14px', borderRadius:8, color:'#fff', background:'#D86835', opacity: saving ? .7 : 1}}>
               {saving ? 'Guardando…' : 'Guardar'}

@@ -8,7 +8,7 @@ const preset = [
   {name:'Café', price:1.5}
 ]
 
-export const POS: React.FC = () => {
+export const Caja: React.FC = () => {
   const [items, setItems] = React.useState<Item[]>([])
   const add = (p:{name:string, price:number})=> setItems(s=>[...s,{...p,qty:1}])
   const total = items.reduce((a,b)=>a+b.price*b.qty,0)

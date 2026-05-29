@@ -43,7 +43,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   return (
     <aside className="hidden md:flex fixed left-0 top-14 h-[calc(100vh-56px)] w-60 bg-white border-r z-40">
       <nav className="w-full p-3 space-y-1">
-        <Item to="/pos" onClick={handleNav} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18v4H3V4zm0 6h10v10H3V10zm12 0h6v6h-6v-6z"/></svg>}>POS</Item>
+        <Item to="/caja" onClick={handleNav} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18v4H3V4zm0 6h10v10H3V10zm12 0h6v6h-6v-6z"/></svg>}>Caja</Item>
         <Item to="/mesas" onClick={handleNav} icon={<MdTableBar />}>Gestión de Mesas</Item>
         <Item to="/inventario" onClick={handleNav} icon={<MdOutlineInventory2 />}>Inventario</Item>
         <Item to="/reportes" onClick={handleNav} icon={<TbReportAnalytics />}>Reportes</Item>

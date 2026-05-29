@@ -33,7 +33,7 @@ export default function Topbar({
           <img src={logoUrl} alt="Zensoci" className="h-10 w-auto ml-3" />
         </a> */}
         <a href="/" className="inline-flex items-center pl-2 md:pl-4">
-      <img src={logoUrl} alt="Zensoci" className="h-12 w-auto ml-2 md:ml-4 object-contain" />
+      <img src={logoUrl} alt="Zensoci" className="logo-z w-auto ml-2 md:ml-4 object-contain" />
     </a>
       </div>
 
