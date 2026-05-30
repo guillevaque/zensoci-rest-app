@@ -1,239 +1,193 @@
-import React from 'react';
-import {
-  listMenuItems,
-  crearMenuItem,
-  editarMenuItem,
-  eliminarMenuItem,
-  type MenuItem,
-} from '../lib/apiMenu';
-import MenuModal, { type MenuForm } from '../components/MenuModal';
+import React, { useState, useEffect } from 'react';
+import { MdAdd, MdEdit } from 'react-icons/md';
+import MenuModal, { MenuForm } from '../components/MenuModal';
+import { http } from '../api/http';
 
-const Pill: React.FC<{ active: boolean }> = ({ active }) => (
-  <span
-    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-      active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-    }`}
-  >
-    {active ? 'Disponible' : 'No disponible'}
-  </span>
-);
+type MenuItem = {
+  id: number;
+  nombre: string;
+  categoria: string;
+  precio: number;
+  descripcion?: string;
+  activo: number;
+  imagen?: string;
+};
 
-export const GestionMenu: React.FC = () => {
-  const [data, setData] = React.useState<MenuItem[]>([]);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [q, setQ] = React.useState('');
-  const [open, setOpen] = React.useState(false);
-  const [saving, setSaving] = React.useState(false);
-  const [editing, setEditing] = React.useState<MenuItem | null>(null);
+const INITIAL_FORM: MenuForm = { nombre: '', categoria: '', precio: 0, descripcion: '', activo: 1 };
 
-  const cargar = async (query = '') => {
+const STOCK_BADGE: Record<string, { label: string; bg: string; color: string }> = {
+  disponible: { label: 'Disponible', bg: '#DCFCE7', color: '#166534' },
+  bajo:       { label: 'Bajo',       bg: '#FEF9C3', color: '#854D0E' },
+  agotado:    { label: 'Agotado',    bg: '#FEE2E2', color: '#991B1B' },
+};
+
+export function GestionMenu() {
+  const [items, setItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [catFilter, setCatFilter] = useState('Todos');
+  const [modal, setModal] = useState<{ open: boolean; title: string; initial: MenuForm; id?: number }>({
+    open: false, title: '', initial: INITIAL_FORM,
+  });
+  const [saving, setSaving] = useState(false);
+
+  const load = () => {
+    setLoading(true);
+    http.get('/menu.php')
+      .then((data: any) => setItems(Array.isArray(data) ? data : data.data ?? []))
+      .catch(() => setItems(MOCK_MENU))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const categories = ['Todos', ...Array.from(new Set(items.map(i => i.categoria).filter(Boolean)))];
+
+  const visible = items.filter(item => {
+    const matchCat = catFilter === 'Todos' || item.categoria === catFilter;
+    const matchQ = !search || item.nombre.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchQ;
+  });
+
+  const openAdd = () => setModal({ open: true, title: 'Nuevo plato', initial: INITIAL_FORM });
+  const openEdit = (item: MenuItem) =>
+    setModal({ open: true, title: 'Editar plato', initial: { ...item }, id: item.id });
+
+  const handleSubmit = async (form: MenuForm) => {
+    setSaving(true);
     try {
-      setLoading(true);
-      setError(null);
-      const res = await listMenuItems({ q: query });
-      setData(res || []);
-    } catch (e: any) {
-      setError(e.message || 'Error al cargar menú');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  React.useEffect(() => {
-    cargar();
-  }, []);
-
-  const nuevo = () => {
-    setEditing(null);
-    setOpen(true);
-  };
-
-  const editar = (row: MenuItem) => {
-    setEditing(row);
-    setOpen(true);
-  };
-
-  const guardar = async (form: MenuForm) => {
-    try {
-      setSaving(true);
-      if (editing) {
-        await editarMenuItem(editing.id, {
-          nombre: form.nombre,
-          categoria: form.categoria,
-          precio: form.precio,
-          descripcion: form.descripcion,
-          activo: form.activo,
-        });
+      if (modal.id) {
+        await http.send('PUT', `/menu.php?id=${modal.id}`, form);
       } else {
-        await crearMenuItem({
-          nombre: form.nombre,
-          categoria: form.categoria,
-          precio: form.precio,
-          descripcion: form.descripcion,
-          activo: form.activo,
-        });
+        await http.send('POST', '/menu.php', form);
       }
-      setOpen(false);
-      setEditing(null);
-      await cargar(q);
-    } catch (e: any) {
-      alert(e.message || 'Error al guardar');
+      setModal(m => ({ ...m, open: false }));
+      load();
+    } catch {
+      alert('Error al guardar');
     } finally {
       setSaving(false);
     }
   };
 
-  const eliminar = async (row: MenuItem) => {
-    if (!confirm(`Eliminar "${row.nombre}"?`)) return;
-    await eliminarMenuItem(row.id);
-    await cargar(q);
+  const getStock = (item: MenuItem) => {
+    if (!item.activo) return 'agotado';
+    return 'disponible';
   };
 
-  const totalItems = data.length;
-
   return (
-    <div className="space-y-4">
-      {/* Header y botón */}
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Gestión de Menú</h1>
-        <button onClick={nuevo} className="rounded-md bg-orange-600 px-4 py-2 text-white">
-          Añadir Nuevo Platillo
+        <div>
+          <h1 className="page-title">MENÚ</h1>
+          <p className="page-subtitle">Platos, categorías y disponibilidad</p>
+        </div>
+        <button className="btn btn-primary" onClick={openAdd}>
+          <MdAdd size={16} /> Nuevo Plato
         </button>
       </div>
 
-      {/* Buscador */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:max-w-xl">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 opacity-60">
-            {/* ícono lupa */}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" stroke="currentColor" strokeWidth="2"/>
-            </svg>
-          </span>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar platillo por nombre"
-            className="w-full rounded-md border px-10 py-2"
-          />
-        </div>
-        <div className="flex gap-2">
-          <button onClick={() => cargar(q)} className="rounded-md border px-4 py-2">
-            Buscar
+      {/* Category filter pills */}
+      <div className="flex flex-wrap gap-2">
+        {categories.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setCatFilter(cat)}
+            className="btn"
+            style={catFilter === cat
+              ? { background: '#3C6030', color: '#fff' }
+              : { background: '#fff', color: '#6B7A69', border: '1px solid #E2EAE0' }}
+          >
+            {cat}{cat === 'Todos' ? ` (${items.length})` : ''}
           </button>
-        </div>
+        ))}
       </div>
 
-      {/* Métrica simple */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <div className="rounded-lg border bg-white p-4">
-          <div className="text-sm text-gray-500">Ítems</div>
-          <div className="text-2xl font-semibold">{totalItems}</div>
-        </div>
-        <div className="rounded-lg border bg-white p-4">
-          <div className="text-sm text-gray-500">Precio promedio</div>
-          <div className="text-2xl font-semibold">
-            $
-            {totalItems
-              ? (data.reduce((a, b) => a + Number(b.precio || 0), 0) / totalItems).toFixed(2)
-              : '0.00'}
+      {/* Table */}
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        {loading ? (
+          <div className="py-12 flex justify-center">
+            <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#3C6030', borderTopColor: 'transparent' }} />
           </div>
-        </div>
+        ) : (
+          <table className="zs-table">
+            <thead>
+              <tr>
+                <th style={{ width: 56 }}></th>
+                <th>Plato</th>
+                <th>Categoría</th>
+                <th>Stock</th>
+                <th>Precio</th>
+                <th style={{ width: 100 }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map(item => {
+                const stock = getStock(item);
+                const sb = STOCK_BADGE[stock];
+                return (
+                  <tr key={item.id}>
+                    <td>
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+                        style={{ background: '#EEF4EC' }}
+                      >
+                        🍽
+                      </div>
+                    </td>
+                    <td>
+                      <div className="font-semibold text-sm" style={{ color: '#1C2B1A' }}>{item.nombre}</div>
+                      {item.descripcion && (
+                        <div className="text-xs truncate" style={{ color: '#6B7A69', maxWidth: 200 }}>{item.descripcion}</div>
+                      )}
+                    </td>
+                    <td className="text-sm" style={{ color: '#6B7A69' }}>{item.categoria || '—'}</td>
+                    <td>
+                      <span className="badge" style={{ background: sb.bg, color: sb.color }}>{sb.label}</span>
+                    </td>
+                    <td className="font-bold text-sm" style={{ color: '#D86835' }}>${Number(item.precio).toFixed(2)}</td>
+                    <td className="text-right">
+                      <button
+                        className="btn btn-ghost"
+                        style={{ fontSize: '0.75rem', gap: 4 }}
+                        onClick={() => openEdit(item)}
+                      >
+                        <MdEdit size={13} /> Editar →
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+        {!loading && visible.length === 0 && (
+          <div className="py-12 text-center" style={{ color: '#6B7A69' }}>
+            No hay platos{catFilter !== 'Todos' ? ` en "${catFilter}"` : ''}.
+          </div>
+        )}
       </div>
 
-      {/* Tabla */}
-      <div className="overflow-x-auto rounded-xl border bg-white">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-left text-gray-700">
-            <tr>
-              <th className="px-4 py-3">Nombre del Platillo</th>
-              <th className="px-4 py-3">Precio</th>
-              <th className="px-4 py-3">Disponibilidad</th>
-              <th className="px-4 py-3">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={4} className="px-4 py-6 text-center">
-                  Cargando…
-                </td>
-              </tr>
-            )}
-            {error && !loading && (
-              <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-red-600">
-                  {error}
-                </td>
-              </tr>
-            )}
-            {!loading && !error && !data.length && (
-              <tr>
-                <td colSpan={4} className="px-4 py-6 text-center">
-                  Sin resultados
-                </td>
-              </tr>
-            )}
-
-            {data.map((row) => (
-              <tr key={row.id} className="border-t">
-                <td className="px-4 py-3">
-                  <div className="font-medium">{row.nombre}</div>
-                  {row.descripcion ? (
-                    <div className="text-xs text-gray-500">{row.descripcion}</div>
-                  ) : null}
-                </td>
-                <td className="px-4 py-3">
-                  ${Number(row.precio || 0).toFixed(2)}
-                </td>
-                <td className="px-4 py-3">
-                  <Pill active={!!row.activo} />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-3">
-                    <button
-                      className="text-orange-700 underline-offset-2 hover:underline"
-                      onClick={() => editar(row)}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="text-red-600 underline-offset-2 hover:underline"
-                      onClick={() => eliminar(row)}
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal */}
       <MenuModal
-        open={open}
-        title={editing ? 'Editar platillo' : 'Nuevo platillo'}
-        initial={
-          editing
-            ? {
-                nombre: editing.nombre,
-                categoria: editing.categoria || '',
-                precio: Number(editing.precio || 0),
-                descripcion: editing.descripcion || '',
-                activo: editing.activo ? 1 : 0,
-              }
-            : { nombre: '', categoria: '', precio: 0, descripcion: '', activo: 1 }
-        }
+        open={modal.open}
+        title={modal.title}
+        initial={modal.initial}
         saving={saving}
-        onClose={() => {
-          setOpen(false);
-          setEditing(null);
-        }}
-        onSubmit={guardar}
+        onClose={() => setModal(m => ({ ...m, open: false }))}
+        onSubmit={handleSubmit}
       />
     </div>
   );
-};
+}
+
+const MOCK_MENU: MenuItem[] = [
+  { id: 1, nombre: 'Hummus clásico',      categoria: 'Hummus', precio: 8.50, activo: 1 },
+  { id: 2, nombre: 'Hummus de remolacha', categoria: 'Hummus', precio: 9.00, activo: 1 },
+  { id: 3, nombre: 'Hummus de zanahoria', categoria: 'Hummus', precio: 9.00, activo: 1 },
+  { id: 4, nombre: 'Baba ganoush',        categoria: 'Hummus', precio: 8.50, activo: 1 },
+  { id: 5, nombre: 'Curry in a hurry',    categoria: 'Bowls',  precio: 12.00, activo: 1 },
+  { id: 6, nombre: 'Sunset bowl',         categoria: 'Bowls',  precio: 13.50, activo: 1 },
+  { id: 7, nombre: 'Garden bowl',         categoria: 'Bowls',  precio: 11.50, activo: 1 },
+  { id: 8, nombre: 'Macro bowl',          categoria: 'Bowls',  precio: 13.00, activo: 0 },
+  { id: 9, nombre: 'Pan pita',            categoria: 'Sides',  precio: 2.50, activo: 1 },
+];

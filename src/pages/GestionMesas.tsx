@@ -1,132 +1,147 @@
-import React from 'react'
+import React, { useState } from 'react';
+import { MdPeople, MdAdd } from 'react-icons/md';
 
-type Estado = 'Libre' | 'Ocupada' | 'Reservada'
-type Mesa = { id:string, nombre:string, asientos:number, x:number, y:number, estado:Estado, color:string }
+type TableStatus = 'libre' | 'ocupada' | 'check';
 
-const ESTADO_COLOR: Record<Estado, string> = {
-  'Libre':'#7fc97f',
-  'Ocupada':'#F2994A',
-  'Reservada':'#7FB3FF'
-}
+type Mesa = {
+  id: number;
+  label: string;
+  capacity: number;
+  status: TableStatus;
+  waiter?: string;
+  since?: string;
+  total?: number;
+};
 
-const defaultMesas: Mesa[] = [
-  { id:'m1', nombre:'Mesa 1', asientos:4, x:340, y:40, estado:'Libre', color:'#7fc97f' },
-  { id:'m2', nombre:'Mesa 2', asientos:2, x:140, y:180, estado:'Ocupada', color:'#F2994A' },
-  { id:'m3', nombre:'Mesa 3', asientos:6, x:300, y:320, estado:'Reservada', color:'#7FB3FF' },
-  { id:'m4', nombre:'Mesa 4', asientos:4, x:520, y:160, estado:'Libre', color:'#7fc97f' },
-]
+const INITIAL: Mesa[] = [
+  { id: 1,  label: 'Mesa 1',   capacity: 2, status: 'ocupada', waiter: 'Andrés',  since: '14:02', total: 24.50 },
+  { id: 2,  label: 'Mesa 2',   capacity: 4, status: 'ocupada', waiter: 'Marisol', since: '13:45', total: 58.10 },
+  { id: 3,  label: 'Mesa 3',   capacity: 2, status: 'libre' },
+  { id: 4,  label: 'Mesa 4',   capacity: 6, status: 'check',   waiter: 'Andrés',  since: '12:50', total: 96.20 },
+  { id: 5,  label: 'Mesa 5',   capacity: 2, status: 'libre' },
+  { id: 6,  label: 'Mesa 6',   capacity: 4, status: 'ocupada', waiter: 'Sofía',   since: '13:20', total: 41.00 },
+  { id: 7,  label: 'Mesa 7',   capacity: 2, status: 'libre' },
+  { id: 8,  label: 'Mesa 8',   capacity: 8, status: 'ocupada', waiter: 'Lucía',   since: '13:00', total: 124.80 },
+  { id: 9,  label: 'Terraza A',capacity: 2, status: 'libre' },
+  { id: 10, label: 'Terraza B',capacity: 4, status: 'ocupada', waiter: 'Sofía',   since: '14:10', total: 36.00 },
+  { id: 11, label: 'Pickup',   capacity: 0, status: 'libre' },
+];
 
-const STORAGE_KEY = 'salon_layout_v1'
+type Filter = 'todas' | 'libres' | 'ocupadas' | 'check';
 
-export const GestionMesas: React.FC = () => {
-  const [mesas, setMesas] = React.useState<Mesa[]>(()=>{
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      return raw ? JSON.parse(raw) : defaultMesas
-    } catch { return defaultMesas }
-  })
-  const [selected, setSelected] = React.useState<string | null>(null)
+const STATUS_BADGE = {
+  libre:   { dot: '#22C55E', label: 'LIBRE',          labelColor: '#6B7A69' },
+  ocupada: { dot: '#D86835', label: null,              labelColor: '#D86835' },
+  check:   { dot: '#EF4444', label: 'NECESITA CHECK', labelColor: '#EF4444' },
+};
 
-  React.useEffect(()=>{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mesas))
-  }, [mesas])
+export function GestionMesas() {
+  const [filter, setFilter] = useState<Filter>('todas');
+  const [mesas] = useState<Mesa[]>(INITIAL);
 
-  const addMesa = () => {
-    const id = 'm' + Math.random().toString(36).slice(2,7)
-    const nueva: Mesa = {
-      id, nombre:`Mesa ${mesas.length+1}`, asientos:4,
-      x: 100 + Math.random()*460, y: 80 + Math.random()*280,
-      estado:'Libre', color:ESTADO_COLOR['Libre']
-    }
-    setMesas(m=>[...m,nueva])
-  }
-  const resetVista = () => setMesas(defaultMesas)
-  const guardarPlano = () => alert('Plano guardado en el navegador (localStorage).')
-  const addSilla = () => alert('Función de ejemplo: aquí podrías adjuntar sillas por mesa.')
+  const counts = {
+    todas:   mesas.length,
+    libres:  mesas.filter(m => m.status === 'libre').length,
+    ocupadas:mesas.filter(m => m.status === 'ocupada').length,
+    check:   mesas.filter(m => m.status === 'check').length,
+  };
 
-  // Drag simple
-  const dragRef = React.useRef<{id:string, offsetX:number, offsetY:number} | null>(null)
-
-  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>, id:string) => {
-    const rect = (e.target as HTMLElement).getBoundingClientRect()
-    dragRef.current = { id, offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top }
-  }
-  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if(!dragRef.current) return
-    const container = e.currentTarget.getBoundingClientRect()
-    const nx = e.clientX - container.left - dragRef.current.offsetX
-    const ny = e.clientY - container.top - dragRef.current.offsetY
-    setMesas(ms=>ms.map(m=> m.id===dragRef.current!.id ? {...m, x: Math.max(0, Math.min(nx, container.width-120)), y: Math.max(0, Math.min(ny, container.height-120))} : m))
-  }
-  const onMouseUp = () => { dragRef.current = null }
-
-  const setEstado = (id:string, estado:Estado) => {
-    setMesas(ms=>ms.map(m=> m.id===id ? {...m, estado, color:ESTADO_COLOR[estado]} : m))
-  }
+  const visible = filter === 'todas' ? mesas
+    : filter === 'libres'   ? mesas.filter(m => m.status === 'libre')
+    : filter === 'ocupadas' ? mesas.filter(m => m.status === 'ocupada')
+    : mesas.filter(m => m.status === 'check');
 
   return (
-    <div className="grid grid-cols-12 gap-4">
-      <aside className="col-span-3 card">
-        <div className="font-semibold text-lg mb-2">Gestión del Salón</div>
-        <div className="text-sm text-gray-600 mb-4">Modo Edición</div>
-        <div className="flex flex-col gap-2">
-          <button onClick={addMesa}>Añadir Mesa</button>
-          <button onClick={addSilla}>Añadir Silla</button>
-          <button onClick={guardarPlano}>Guardar Plano</button>
-          <button onClick={resetVista}>Resetear Vista</button>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="page-title">MESAS</h1>
+          <p className="page-subtitle">Plano de salón · {mesas.length} mesas</p>
         </div>
-        <div className="mt-6">
-          <div className="font-semibold mb-2">Información</div>
-          {selected ? (
-            <div className="text-sm">
-              <div><b>Mesa Seleccionada:</b> {mesas.find(m=>m.id===selected)?.nombre}</div>
-              <div><b>Estado:</b> {mesas.find(m=>m.id===selected)?.estado}</div>
-              <div className="mt-2 flex gap-2">
-                {(['Libre','Ocupada','Reservada'] as Estado[]).map(st=> (
-                  <button key={st} onClick={()=>setEstado(selected, st as Estado)} style={{background: ESTADO_COLOR[st as Estado]}}>
-                    {st}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : <div className="text-sm text-gray-600">Selecciona una mesa.</div>}
-        </div>
-      </aside>
+      </div>
 
-      <section className="col-span-9 card" style={{height:'520px'}}>
-        <div
-          className="relative w-full h-full overflow-hidden select-none"
-          onMouseMove={onMouseMove}
-          onMouseUp={onMouseUp}
-          onMouseLeave={onMouseUp}
-        >
-          {/* Círculo punteado para referencia */}
-          <div
-            style={{
-              position:'absolute', left:'50%', top:'50%', transform:'translate(-50%,-50%)',
-              width:'520px', height:'520px', border:'3px dashed #d1d5db', borderRadius:'50%'
-            }}
-          />
-          {/* Mesas */}
-          {mesas.map(m=> (
-            <div key={m.id}
-              onMouseDown={(e)=>onMouseDown(e, m.id)}
-              onClick={()=>setSelected(m.id)}
+      {/* Filter pills */}
+      <div className="flex flex-wrap gap-2">
+        {([
+          { key: 'todas',   label: `Todas (${counts.todas})` },
+          { key: 'libres',  label: `Libres (${counts.libres})` },
+          { key: 'ocupadas',label: `Ocupadas (${counts.ocupadas})` },
+          { key: 'check',   label: `Necesitan check (${counts.check})` },
+        ] as { key: Filter; label: string }[]).map(f => (
+          <button
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className="btn"
+            style={filter === f.key
+              ? { background: '#3C6030', color: '#fff' }
+              : { background: '#fff', color: '#6B7A69', border: '1px solid #E2EAE0' }}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
+        {visible.map(mesa => {
+          const s = STATUS_BADGE[mesa.status];
+          return (
+            <div
+              key={mesa.id}
+              className="card"
               style={{
-                position:'absolute', left:m.x, top:m.y, width:'120px', height:'90px',
-                background:m.color, borderRadius:'10px', boxShadow:'0 6px 14px rgba(0,0,0,.12)',
-                cursor:'grab', padding:'12px'
+                cursor: 'pointer',
+                border: mesa.status === 'check' ? '2px solid #EF4444'
+                       : mesa.status === 'ocupada' ? '2px solid #E2EAE0'
+                       : '2px solid #E2EAE0',
+                transition: 'box-shadow 0.15s, border-color 0.15s',
+                position: 'relative',
               }}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.12)')}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}
             >
-              <div className="font-semibold">{m.nombre}</div>
-              <div className="text-xs opacity-80">{m.asientos} Asientos</div>
-              <span style={{background:'#0E9F6E', color:'white', borderRadius: '999px', padding:'2px 8px', fontSize:'11px'}}>
-                {m.estado}
-              </span>
+              {/* Status dot */}
+              <div
+                style={{
+                  position: 'absolute', top: 12, right: 12,
+                  width: 10, height: 10, borderRadius: '50%', background: s.dot,
+                }}
+              />
+
+              {/* Title */}
+              <div className="font-black" style={{ fontSize: '1rem', color: '#1C2B1A', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: 4 }}>
+                {mesa.label}
+              </div>
+
+              {/* Capacity */}
+              <div className="flex items-center gap-1 text-xs mb-3" style={{ color: '#6B7A69' }}>
+                <MdPeople size={13} />{mesa.capacity} pers.
+              </div>
+
+              {mesa.status === 'libre' ? (
+                <div className="text-center py-4">
+                  <div className="font-bold text-xs mb-2" style={{ color: '#6B7A69' }}>LIBRE</div>
+                  <div className="text-xs" style={{ color: '#9CA3AF' }}>Tocar para abrir</div>
+                </div>
+              ) : (
+                <>
+                  <div className="font-bold text-xs uppercase tracking-wide" style={{ color: s.labelColor, marginBottom: 2 }}>
+                    {s.label ?? mesa.waiter}
+                  </div>
+                  {mesa.status === 'check' && (
+                    <div className="text-xs" style={{ color: '#6B7A69' }}>{mesa.waiter}</div>
+                  )}
+                  <div className="text-xs" style={{ color: '#6B7A69', marginTop: 2 }}>Desde {mesa.since}</div>
+                  <div className="font-black" style={{ fontSize: '1.1rem', color: '#1C2B1A', marginTop: 8 }}>
+                    ${mesa.total?.toFixed(2)}
+                  </div>
+                </>
+              )}
             </div>
-          ))}
-        </div>
-      </section>
+          );
+        })}
+      </div>
     </div>
-  )
+  );
 }

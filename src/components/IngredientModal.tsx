@@ -30,7 +30,7 @@ export default function IngredientModal({ open, title, initial, onClose, onSubmi
     const v = e.target.value
     setValues(s => ({
       ...s,
-      [k]: ['stock','minimo','costo'].includes(k as string) ? Number(v) : v
+      [k]: ['stock', 'minimo', 'costo'].includes(k as string) ? Number(v) : v,
     }))
   }
 
@@ -45,54 +45,92 @@ export default function IngredientModal({ open, title, initial, onClose, onSubmi
     }
   }
 
-  // estilos simples y limpios
-  const field = 'w-full border rounded px-3 py-2'
-  const label = 'text-sm font-medium mb-1'
+  const fields: { key: keyof IngredienteForm; label: string; type?: string; placeholder?: string }[] = [
+    { key: 'nombre',    label: 'Nombre',        placeholder: 'Ej. Tomate cherry' },
+    { key: 'categoria', label: 'Categoría',      placeholder: 'Ej. Vegetales' },
+    { key: 'proveedor', label: 'Proveedor',      placeholder: 'Ej. Mercado central' },
+    { key: 'unidad',    label: 'Unidad',         placeholder: 'kg, L, g, u…' },
+    { key: 'stock',     label: 'Stock actual',   type: 'number' },
+    { key: 'minimo',    label: 'Stock mínimo',   type: 'number' },
+    { key: 'costo',     label: 'Costo unitario', type: 'number' },
+  ]
 
   return (
-    <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,.4)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:50}}>
-      <div style={{background:'#fff', width:520, maxWidth:'92vw', borderRadius:12, boxShadow:'0 10px 30px rgba(0,0,0,.25)'}}>
-        <div style={{padding:'14px 18px', borderBottom:'1px solid #eee', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-          <h3 style={{fontWeight:800}}>{title}</h3>
-          <button onClick={onClose} aria-label="Cerrar" style={{fontSize:20, lineHeight:1}}>×</button>
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div
+        style={{
+          background: '#fff',
+          width: 540,
+          maxWidth: '100%',
+          borderRadius: 20,
+          boxShadow: '0 16px 48px rgba(0,0,0,0.20)',
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: '90vh',
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            padding: '16px 20px',
+            borderBottom: '1px solid #E2EAE0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <h3 style={{ fontWeight: 800, fontSize: '1.0625rem', color: '#1C2B1A', margin: 0 }}>{title}</h3>
+          <button
+            onClick={onClose}
+            style={{
+              background: '#EEF4EC', color: '#3C6030', border: 'none',
+              width: 30, height: 30, borderRadius: '50%', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 16, padding: 0,
+            }}
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
         </div>
 
-        <form onSubmit={submit} style={{padding:18}}>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <div className={label}>Nombre</div>
-              <input className={field} value={values.nombre} onChange={set('nombre')} required />
-            </div>
-            <div>
-              <div className={label}>Categoría</div>
-              <input className={field} value={values.categoria} onChange={set('categoria')} />
-            </div>
-            <div>
-              <div className={label}>Proveedor</div>
-              <input className={field} value={values.proveedor} onChange={set('proveedor')} />
-            </div>
-            <div>
-              <div className={label}>Unidad</div>
-              <input className={field} value={values.unidad} onChange={set('unidad')} placeholder="kg, L, g…" />
-            </div>
-            <div>
-              <div className={label}>Stock</div>
-              <input type="number" step="0.01" className={field} value={values.stock} onChange={set('stock')} />
-            </div>
-            <div>
-              <div className={label}>Stock mínimo</div>
-              <input type="number" step="0.01" className={field} value={values.minimo} onChange={set('minimo')} />
-            </div>
-            <div className="col-span-2">
-              <div className={label}>Costo unitario</div>
-              <input type="number" step="0.01" className={field} value={values.costo} onChange={set('costo')} />
-            </div>
+        {/* Form */}
+        <form onSubmit={submit} style={{ padding: 20, overflow: 'auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            {fields.map(f => (
+              <div key={f.key} style={f.key === 'costo' ? { gridColumn: '1 / -1' } : {}}>
+                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#1C2B1A', marginBottom: 6 }}>
+                  {f.label}
+                </label>
+                <input
+                  type={f.type || 'text'}
+                  step={f.type === 'number' ? '0.01' : undefined}
+                  className="input"
+                  value={values[f.key] as string | number}
+                  onChange={set(f.key)}
+                  placeholder={f.placeholder}
+                  required={f.key === 'nombre'}
+                />
+              </div>
+            ))}
           </div>
 
-          <div style={{display:'flex', gap:8, justifyContent:'flex-end', marginTop:16}}>
-            <button type="button" onClick={onClose} style={{padding:'8px 12px', borderRadius:8, background:'rgba(0,0,0,.06)'}}>Cancelar</button>
-            <button type="submit" disabled={saving}
-              style={{padding:'8px 14px', borderRadius:8, color:'#fff', background:'#D86835', opacity: saving ? .7 : 1}}>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn btn-ghost"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="btn btn-primary"
+            >
               {saving ? 'Guardando…' : 'Guardar'}
             </button>
           </div>
