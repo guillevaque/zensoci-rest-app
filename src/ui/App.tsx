@@ -2,34 +2,40 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from '../ui/Layout'
 
-// Páginas
-import { Caja } from '../pages/Caja'
+import Login from '../pages/Login'
+import Dashboard from '../pages/Dashboard'
+import { GestionMesas } from '../pages/GestionMesas'
+import Pedidos from '../pages/Pedidos'
+import { GestionMenu } from '../pages/GestionMenu'
 import { Inventory } from '../pages/Inventory'
 import { Reports } from '../pages/Reports'
+import { Costeo } from '../pages/Costeo'
+import { Empaques } from '../pages/Empaques'
+import Personal from '../pages/Personal'
 import { Settings } from '../pages/Settings'
-import { GestionMesas } from '../pages/GestionMesas'
-import { GestionMenu } from '../pages/GestionMenu'
-import Login from '../pages/Login'
 
 export function App() {
   return (
     <Routes>
-      {/* TODAS las páginas con header + sidebar van dentro de Layout */}
-      <Route element={<Layout />}>
-        <Route index element={<Navigate to="/caja" replace />} />
-        <Route path="/caja" element={<Caja />} />
-        <Route path="/mesas" element={<GestionMesas />} />
-        <Route path="/inventario" element={<Inventory />} />
-        <Route path="/menu" element={<GestionMenu />} />
-        <Route path="/reportes" element={<Reports />} />
-        <Route path="/ajustes" element={<Settings />} />
-      </Route>
-
-      {/* Fuera del layout, por ahora el login simple */}
       <Route path="/login" element={<Login />} />
 
-      {/* 404 */}
-      <Route path="*" element={<div className="p-6">Página no encontrada</div>} />
+      <Route element={<Layout />}>
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard"  element={<Dashboard />} />
+        <Route path="/mesas"      element={<GestionMesas />} />
+        <Route path="/pedidos"    element={<Pedidos />} />
+        <Route path="/menu"       element={<GestionMenu />} />
+        <Route path="/inventario" element={<Inventory />} />
+        <Route path="/reportes"   element={<Reports />} />
+        <Route path="/costeo"     element={<Costeo />} />
+        <Route path="/empaques"   element={<Empaques />} />
+        <Route path="/personal"   element={<Personal />} />
+        <Route path="/ajustes"    element={<Settings />} />
+        {/* legacy redirect */}
+        <Route path="/pos"        element={<Navigate to="/pedidos" replace />} />
+      </Route>
+
+      <Route path="*" element={<div className="p-8 text-center" style={{ color: '#6B7A69' }}>Página no encontrada</div>} />
     </Routes>
   )
 }
