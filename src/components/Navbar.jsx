@@ -12,7 +12,7 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between text-white">
         <div className="flex items-center gap-3">
           {/* LOGO */}
-          <img src="/logo-zensoci.png" alt="Zensoci" className="h-10 w-auto ml-3" />
+          <img src="/Zensoci_LogoH.png" alt="Zensoci" className="h-10 w-auto ml-3" />
           <span className="font-semibold tracking-wide">Restaurante Vegano</span>
         </div>
 
