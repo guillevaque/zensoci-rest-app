@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   MdDashboard, MdTableBar, MdOutlineInventory2, MdMenuBook,
   MdBarChart, MdPeople, MdSettings, MdLogout, MdReceipt,
+  MdOutlineCalculate,
 } from 'react-icons/md';
 
 type SidebarProps = { onNavigate?: () => void };
@@ -16,9 +17,10 @@ const OPERATION = [
 ];
 
 const ADMIN = [
-  { to: '/reportes',  icon: <MdBarChart size={18} />,  label: 'Reportes' },
-  { to: '/personal',  icon: <MdPeople size={18} />,    label: 'Personal' },
-  { to: '/ajustes',   icon: <MdSettings size={18} />,  label: 'Configuración' },
+  { to: '/reportes',  icon: <MdBarChart size={18} />,        label: 'Reportes' },
+  { to: '/costeo',    icon: <MdOutlineCalculate size={18} />, label: 'Costeo Menú' },
+  { to: '/personal',  icon: <MdPeople size={18} />,          label: 'Personal' },
+  { to: '/ajustes',   icon: <MdSettings size={18} />,        label: 'Configuración' },
 ];
 
 const LINK_BASE =

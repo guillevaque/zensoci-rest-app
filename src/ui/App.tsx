@@ -9,6 +9,7 @@ import Pedidos from '../pages/Pedidos'
 import { GestionMenu } from '../pages/GestionMenu'
 import { Inventory } from '../pages/Inventory'
 import { Reports } from '../pages/Reports'
+import { Costeo } from '../pages/Costeo'
 import Personal from '../pages/Personal'
 import { Settings } from '../pages/Settings'
 
@@ -25,6 +26,7 @@ export function App() {
         <Route path="/menu"       element={<GestionMenu />} />
         <Route path="/inventario" element={<Inventory />} />
         <Route path="/reportes"   element={<Reports />} />
+        <Route path="/costeo"     element={<Costeo />} />
         <Route path="/personal"   element={<Personal />} />
         <Route path="/ajustes"    element={<Settings />} />
         {/* legacy redirect */}
