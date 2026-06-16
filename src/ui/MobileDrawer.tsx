@@ -7,15 +7,16 @@ import {
 } from 'react-icons/md';
 
 type Props = { open: boolean; onClose: () => void };
+type NavItemDef = { to: string; icon: React.ReactElement; label: string; badge?: number };
 
-const OPERATION = [
+const OPERATION: NavItemDef[] = [
   { to: '/dashboard', icon: <MdDashboard size={18} />,        label: 'Dashboard' },
   { to: '/mesas',     icon: <MdTableBar size={18} />,          label: 'Mesas' },
   { to: '/pedidos',   icon: <MdReceipt size={18} />,           label: 'Pedidos' },
   { to: '/menu',      icon: <MdMenuBook size={18} />,          label: 'Menú' },
   { to: '/inventario',icon: <MdOutlineInventory2 size={18} />, label: 'Inventario' },
 ];
-const ADMIN = [
+const ADMIN: NavItemDef[] = [
   { to: '/reportes', icon: <MdBarChart size={18} />,        label: 'Reportes' },
   { to: '/costeo',   icon: <MdOutlineCalculate size={18} />, label: 'Costeo Menú' },
   { to: '/personal', icon: <MdPeople size={18} />,          label: 'Personal' },
