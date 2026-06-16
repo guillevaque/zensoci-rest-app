@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   MdDashboard, MdTableBar, MdOutlineInventory2, MdMenuBook,
   MdBarChart, MdPeople, MdSettings, MdLogout, MdReceipt, MdClose,
-  MdOutlineCalculate,
+  MdOutlineCalculate, MdOutlineLocalMall,
 } from 'react-icons/md';
 
 type Props = { open: boolean; onClose: () => void };
@@ -15,6 +15,7 @@ const OPERATION: NavItemDef[] = [
   { to: '/pedidos',   icon: <MdReceipt size={18} />,           label: 'Pedidos' },
   { to: '/menu',      icon: <MdMenuBook size={18} />,          label: 'Menú' },
   { to: '/inventario',icon: <MdOutlineInventory2 size={18} />, label: 'Inventario' },
+  { to: '/empaques',  icon: <MdOutlineLocalMall size={18} />,  label: 'Empaques' },
 ];
 const ADMIN: NavItemDef[] = [
   { to: '/reportes', icon: <MdBarChart size={18} />,        label: 'Reportes' },
