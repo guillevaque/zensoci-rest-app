@@ -25,8 +25,16 @@ try {
 
         if (!$platillo) { http_response_code(404); echo json_encode(['error' => 'No encontrado']); exit; }
 
+        // Detalle de ingredientes con el costo VIVO del catálogo unificado.
+        // COALESCE: usa el costo del ingrediente; si es línea de empaque, el del empaque.
         $stmt2 = $pdo->prepare(
-            'SELECT * FROM costeo_detalle_ingredientes WHERE costeo_platillo_id = ? ORDER BY tipo, id'
+            'SELECT d.*,
+                    COALESCE(i.unit_cost, e.unit_cost) AS precio_unitario_actual
+               FROM costeo_detalle_ingredientes d
+               LEFT JOIN ingredients i ON i.id = d.ingredient_id
+               LEFT JOIN empaques    e ON e.id = d.empaque_id
+              WHERE d.costeo_platillo_id = ?
+              ORDER BY d.tipo, d.id'
         );
         $stmt2->execute([$id]);
         $platillo['ingredientes'] = $stmt2->fetchAll(PDO::FETCH_ASSOC);

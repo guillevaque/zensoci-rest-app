@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   MdDashboard, MdTableBar, MdOutlineInventory2, MdMenuBook,
   MdBarChart, MdPeople, MdSettings, MdLogout, MdReceipt,
-  MdOutlineCalculate,
+  MdOutlineCalculate, MdOutlineLocalMall,
 } from 'react-icons/md';
 
 type SidebarProps = { onNavigate?: () => void };
@@ -16,6 +16,7 @@ const OPERATION: NavItemDef[] = [
   { to: '/pedidos',   icon: <MdReceipt size={18} />,           label: 'Pedidos', badge: 3 },
   { to: '/menu',      icon: <MdMenuBook size={18} />,          label: 'Menú' },
   { to: '/inventario',icon: <MdOutlineInventory2 size={18} />, label: 'Inventario' },
+  { to: '/empaques',  icon: <MdOutlineLocalMall size={18} />,  label: 'Empaques' },
 ];
 
 const ADMIN: NavItemDef[] = [

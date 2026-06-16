@@ -10,6 +10,11 @@ export type CosteoIngrediente = {
   porcentaje_merma: number
   precio_unitario: number | null
   costo_ingrediente: number | null
+  // Enlaces al catálogo unificado (poblados tras la migración)
+  ingredient_id?: number | null
+  empaque_id?: number | null
+  // Costo vivo tomado del catálogo de inventario (si la API lo provee)
+  precio_unitario_actual?: number | null
 }
 
 export type CosteoPlatillo = {
