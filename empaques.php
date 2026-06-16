@@ -1,6 +1,7 @@
 <?php
 // api/empaques.php
-// CRUD del catálogo de empaques — usa la tabla unificada `ingredientes`.
+// CRUD del catálogo de empaques de Zensoci POS.
+// Coloca este archivo en tu carpeta /api/ en Hostinger.
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -14,19 +15,18 @@ require_once __DIR__ . '/config.php'; // $pdo
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
-// Campos editables para empaques
 $FIELDS = ['name','category_label','brand','supplier','presentation','unit',
            'units_per_pack','purchase_price_no_iva','unit_cost','stock_qty','min_stock','activo'];
 
 try {
     if ($method === 'GET') {
-        $where  = ["tipo = 'empaque'", 'costeo_platillo_id IS NULL', 'activo = 1'];
+        $where  = ['activo = 1'];
         $params = [];
-        if (!empty($_GET['q']))                         { $where[] = 'name LIKE ?'; $params[] = '%' . $_GET['q'] . '%'; }
-        if (($_GET['filter'] ?? '') === 'bajo')         { $where[] = 'stock_qty > 0 AND stock_qty <= min_stock'; }
-        if (($_GET['filter'] ?? '') === 'agotados')     { $where[] = 'stock_qty <= 0'; }
+        if (!empty($_GET['q']))                     { $where[] = 'name LIKE ?'; $params[] = '%' . $_GET['q'] . '%'; }
+        if (($_GET['filter'] ?? '') === 'bajo')     { $where[] = 'stock_qty > 0 AND stock_qty <= min_stock'; }
+        if (($_GET['filter'] ?? '') === 'agotados') { $where[] = 'stock_qty <= 0'; }
 
-        $sql  = 'SELECT * FROM ingredientes WHERE ' . implode(' AND ', $where) . ' ORDER BY name';
+        $sql  = 'SELECT * FROM empaques WHERE ' . implode(' AND ', $where) . ' ORDER BY name';
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -35,12 +35,12 @@ try {
 
     if ($method === 'POST') {
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
-        $cols = ["`tipo`"]; $ph = ["'empaque'"]; $vals = [];
+        $cols = []; $ph = []; $vals = [];
         foreach ($FIELDS as $f) {
             if (array_key_exists($f, $data)) { $cols[] = "`$f`"; $ph[] = '?'; $vals[] = $data[$f]; }
         }
-        if (count($cols) <= 1) { http_response_code(400); echo json_encode(['error' => 'Sin datos']); exit; }
-        $pdo->prepare('INSERT INTO ingredientes (' . implode(',', $cols) . ') VALUES (' . implode(',', $ph) . ')')
+        if (empty($cols)) { http_response_code(400); echo json_encode(['error' => 'Sin datos']); exit; }
+        $pdo->prepare('INSERT INTO empaques (' . implode(',', $cols) . ') VALUES (' . implode(',', $ph) . ')')
             ->execute($vals);
         echo json_encode(['ok' => true, 'id' => (int)$pdo->lastInsertId()]);
         exit;
@@ -54,13 +54,13 @@ try {
         }
         if (empty($sets)) { http_response_code(400); echo json_encode(['error' => 'Sin campos']); exit; }
         $vals[] = $id;
-        $pdo->prepare("UPDATE ingredientes SET " . implode(', ', $sets) . " WHERE id = ? AND tipo = 'empaque'")->execute($vals);
+        $pdo->prepare('UPDATE empaques SET ' . implode(', ', $sets) . ' WHERE id = ?')->execute($vals);
         echo json_encode(['ok' => true]);
         exit;
     }
 
     if ($method === 'DELETE' && $id) {
-        $pdo->prepare("UPDATE ingredientes SET activo = 0 WHERE id = ? AND tipo = 'empaque'")->execute([$id]);
+        $pdo->prepare('UPDATE empaques SET activo = 0 WHERE id = ?')->execute([$id]);
         echo json_encode(['ok' => true]);
         exit;
     }

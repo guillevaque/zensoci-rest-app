@@ -25,14 +25,17 @@ try {
 
         if (!$platillo) { http_response_code(404); echo json_encode(['error' => 'No encontrado']); exit; }
 
-        // Líneas de receta + costo vivo (self-join por nombre en la tabla unificada).
+        // Líneas de receta + costo vivo:
+        //   principal/secundario → desde ingredientes (catálogo unificado)
+        //   empaque              → desde tabla empaques (separada)
         $stmt2 = $pdo->prepare(
             'SELECT r.*,
-                    c.unit_cost AS precio_unitario_actual
+                    COALESCE(cat.unit_cost, emp.unit_cost) AS precio_unitario_actual
                FROM ingredientes r
-               LEFT JOIN ingredientes c
-                      ON c.name = r.name
-                     AND c.costeo_platillo_id IS NULL
+               LEFT JOIN ingredientes cat ON cat.name = r.name
+                                         AND cat.costeo_platillo_id IS NULL
+               LEFT JOIN empaques     emp ON emp.name = r.name
+                                         AND r.tipo_receta = \'empaque\'
               WHERE r.costeo_platillo_id = ?
               ORDER BY r.tipo_receta, r.id'
         );
