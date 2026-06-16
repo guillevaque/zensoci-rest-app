@@ -8,9 +8,15 @@ function pct(v: number | null) {
   if (v === null || v === undefined) return '—'
   return `${(v * 100).toFixed(1)}%`
 }
-function usd(v: number | null) {
+function usd(v: number | null | undefined) {
   if (v === null || v === undefined) return '—'
   return `$${Number(v).toFixed(2)}`
+}
+
+/** Costo vivo de un ingrediente aplicando merma */
+function liveCosto(ing: CosteoIngrediente): number | null {
+  if (ing.precio_unitario_actual == null || ing.cantidad == null) return null
+  return ing.cantidad * ing.precio_unitario_actual * (1 + (ing.porcentaje_merma ?? 0))
 }
 
 function MargenBadge({ valor }: { valor: number | null }) {
@@ -27,38 +33,79 @@ function MargenBadge({ valor }: { valor: number | null }) {
   )
 }
 
+function DeltaBadge({ snapshot, live }: { snapshot: number | null; live: number | null }) {
+  if (snapshot == null || live == null) return <span className="text-gray-300 text-xs">—</span>
+  const diff = live - snapshot
+  const pctDiff = snapshot !== 0 ? diff / snapshot : 0
+  if (Math.abs(pctDiff) < 0.02) {
+    return <span className="text-gray-400 text-xs font-medium">≈</span>
+  }
+  const up = diff > 0
+  return (
+    <span className={`text-xs font-semibold ${up ? 'text-red-600' : 'text-green-600'}`}>
+      {up ? '▲' : '▼'} {Math.abs(pctDiff * 100).toFixed(1)}%
+    </span>
+  )
+}
+
 function IngredientesDrawer({ platillo, onClose }: { platillo: CosteoPlatillo; onClose: () => void }) {
   const principales = platillo.ingredientes?.filter(i => i.tipo === 'principal') ?? []
   const secundarios = platillo.ingredientes?.filter(i => i.tipo === 'secundario') ?? []
   const empaque = platillo.ingredientes?.filter(i => i.tipo === 'empaque') ?? []
 
+  const allIngs = platillo.ingredientes ?? []
+  const totalSnapshot = allIngs.reduce((sum, i) => sum + (i.costo_ingrediente ?? 0), 0)
+  const totalLive = allIngs.reduce<number | null>((sum, i) => {
+    const lc = liveCosto(i)
+    if (lc == null) return sum  // si alguno no tiene costo vivo, ignora
+    return (sum ?? 0) + lc
+  }, 0)
+  const hasLive = allIngs.some(i => i.precio_unitario_actual != null)
+
   const seccion = (titulo: string, items: CosteoIngrediente[], colorClass: string) => {
     if (items.length === 0) return null
     return (
-      <div className="mb-4">
+      <div className="mb-5">
         <h4 className={`text-xs font-bold uppercase tracking-wide mb-2 ${colorClass}`}>{titulo}</h4>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-gray-500 border-b text-xs">
-              <th className="pb-1 font-medium">Ingrediente</th>
-              <th className="pb-1 font-medium text-right">Cantidad</th>
-              <th className="pb-1 font-medium text-right">Costo</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((ing) => (
-              <tr key={ing.id} className="border-b border-gray-50 hover:bg-gray-50">
-                <td className="py-1 pr-2">{ing.nombre_ingrediente}</td>
-                <td className="py-1 text-right text-gray-600 whitespace-nowrap">
-                  {ing.cantidad != null ? `${ing.cantidad} ${ing.unidad_medida ?? ''}` : '—'}
-                </td>
-                <td className="py-1 text-right font-mono text-gray-800">
-                  {usd(ing.costo_ingrediente)}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[480px]">
+            <thead>
+              <tr className="text-left text-gray-400 border-b text-xs">
+                <th className="pb-1 font-medium">Ingrediente</th>
+                <th className="pb-1 font-medium text-right">Cant.</th>
+                <th className="pb-1 font-medium text-right">Costo ref.</th>
+                {hasLive && <th className="pb-1 font-medium text-right">Costo real</th>}
+                {hasLive && <th className="pb-1 font-medium text-right">Δ</th>}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((ing) => {
+                const lc = liveCosto(ing)
+                return (
+                  <tr key={ing.id} className="border-b border-gray-50 hover:bg-gray-50">
+                    <td className="py-1.5 pr-2 text-gray-800">{ing.nombre_ingrediente}</td>
+                    <td className="py-1.5 text-right text-gray-500 whitespace-nowrap text-xs">
+                      {ing.cantidad != null ? `${ing.cantidad} ${ing.unidad_medida ?? ''}` : '—'}
+                    </td>
+                    <td className="py-1.5 text-right font-mono text-gray-500">
+                      {usd(ing.costo_ingrediente)}
+                    </td>
+                    {hasLive && (
+                      <td className={`py-1.5 text-right font-mono font-medium ${lc == null ? 'text-gray-300' : 'text-gray-800'}`}>
+                        {lc != null ? usd(lc) : <span className="text-gray-300 text-xs">sin enlace</span>}
+                      </td>
+                    )}
+                    {hasLive && (
+                      <td className="py-1.5 text-right">
+                        <DeltaBadge snapshot={ing.costo_ingrediente} live={lc} />
+                      </td>
+                    )}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     )
   }
@@ -66,23 +113,26 @@ function IngredientesDrawer({ platillo, onClose }: { platillo: CosteoPlatillo; o
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <aside className="relative w-full max-w-md bg-white h-full shadow-xl flex flex-col">
-        <div className="px-5 py-4 border-b flex items-center justify-between bg-orange-600 text-white">
+      <aside className="relative w-full max-w-lg bg-white h-full shadow-xl flex flex-col">
+
+        {/* Header */}
+        <div className="px-5 py-4 border-b flex items-center justify-between flex-shrink-0" style={{ background: '#D86835' }}>
           <div>
-            <p className="text-xs opacity-80 uppercase tracking-wide">{platillo.categoria}</p>
-            <h3 className="text-base font-semibold leading-tight">{platillo.nombre}</h3>
+            <p className="text-xs text-white/70 uppercase tracking-wide">{platillo.categoria}</p>
+            <h3 className="text-base font-semibold text-white leading-tight">{platillo.nombre}</h3>
           </div>
-          <button onClick={onClose} className="text-white/80 hover:text-white text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-white/80 hover:text-white text-2xl leading-none w-8 h-8 flex items-center justify-center">×</button>
         </div>
 
-        <div className="px-5 py-3 bg-orange-50 border-b grid grid-cols-3 gap-2 text-center">
+        {/* Resumen de precios */}
+        <div className="px-5 py-3 border-b grid grid-cols-3 gap-2 text-center flex-shrink-0 bg-orange-50">
           <div>
             <p className="text-xs text-gray-500">Costo/porción</p>
             <p className="font-semibold text-gray-800">{usd(platillo.costo_unitario)}</p>
           </div>
           <div>
             <p className="text-xs text-gray-500">Precio (c/IVA)</p>
-            <p className="font-semibold text-orange-700">{usd(platillo.precio_con_iva)}</p>
+            <p className="font-semibold text-orange-600">{usd(platillo.precio_con_iva)}</p>
           </div>
           <div>
             <p className="text-xs text-gray-500">Margen neto</p>
@@ -90,6 +140,15 @@ function IngredientesDrawer({ platillo, onClose }: { platillo: CosteoPlatillo; o
           </div>
         </div>
 
+        {/* Leyenda de columnas */}
+        {hasLive && (
+          <div className="px-5 py-2 flex items-center gap-4 text-xs border-b bg-blue-50 text-blue-700 flex-shrink-0">
+            <span className="font-semibold">Costo ref.</span><span className="text-blue-400">= snapshot del costeo inicial</span>
+            <span className="font-semibold">Costo real</span><span className="text-blue-400">= precio vivo del inventario</span>
+          </div>
+        )}
+
+        {/* Ingredientes */}
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {platillo.ingredientes && platillo.ingredientes.length > 0 ? (
             <>
@@ -97,16 +156,47 @@ function IngredientesDrawer({ platillo, onClose }: { platillo: CosteoPlatillo; o
               {seccion('Subrecetas / Acompañamientos', secundarios, 'text-purple-600')}
               {seccion('Empaque', empaque, 'text-gray-500')}
 
-              <div className="mt-4 pt-3 border-t grid grid-cols-2 gap-3 text-sm">
-                <div className="bg-gray-50 rounded p-3">
-                  <p className="text-xs text-gray-500 mb-1">Costo insumos</p>
-                  <p className="font-semibold">{usd(platillo.costo_porcion ? platillo.costo_porcion * platillo.porciones : null)}</p>
-                  <p className="text-xs text-gray-400">({platillo.porciones} porciones)</p>
-                </div>
-                <div className="bg-gray-50 rounded p-3">
-                  <p className="text-xs text-gray-500 mb-1">Precio delivery</p>
-                  <p className="font-semibold text-orange-600">{usd(platillo.precio_delivery)}</p>
-                  <p className="text-xs text-gray-400">+{pct(platillo.incremento_delivery)} entrega</p>
+              {/* Totales snapshot vs live */}
+              <div className="mt-4 pt-3 border-t">
+                {hasLive ? (
+                  <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Costo total de ingredientes</p>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-400">Referencia (costeo)</p>
+                        <p className="font-mono font-semibold text-gray-600">{usd(totalSnapshot)}</p>
+                      </div>
+                      <div className="text-gray-300 text-lg">→</div>
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-400">Real (inventario)</p>
+                        <p className={`font-mono font-bold ${
+                          totalLive != null && totalLive > totalSnapshot * 1.05
+                            ? 'text-red-600'
+                            : totalLive != null && totalLive < totalSnapshot * 0.95
+                              ? 'text-green-600'
+                              : 'text-gray-800'
+                        }`}>
+                          {totalLive != null ? usd(totalLive) : '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <DeltaBadge snapshot={totalSnapshot} live={totalLive} />
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 mb-1">Costo insumos (receta)</p>
+                    <p className="font-semibold">{usd(platillo.costo_porcion ? platillo.costo_porcion * platillo.porciones : null)}</p>
+                    <p className="text-xs text-gray-400">{platillo.porciones} porción{platillo.porciones !== 1 ? 'es' : ''}/receta</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 mb-1">Precio delivery</p>
+                    <p className="font-semibold text-orange-600">{usd(platillo.precio_delivery)}</p>
+                    <p className="text-xs text-gray-400">+{pct(platillo.incremento_delivery)} entrega</p>
+                  </div>
                 </div>
               </div>
             </>
@@ -224,7 +314,7 @@ export function Costeo() {
                 <td className="px-4 py-3 text-gray-400 text-xs">{p.numero_menu}</td>
                 <td className="px-4 py-3 font-medium text-gray-900 max-w-[200px]">
                   <span className="line-clamp-1">{p.nombre}</span>
-                  <span className="text-xs text-gray-400">{p.porciones} porción{p.porciones !== 1 ? 'es' : ''}/receta</span>
+                  <span className="block text-xs text-gray-400">{p.porciones} porción{p.porciones !== 1 ? 'es' : ''}/receta</span>
                 </td>
                 <td className="px-4 py-3 text-gray-500">{p.categoria}</td>
                 <td className="px-4 py-3 text-right font-mono text-gray-800">{usd(p.precio_con_iva)}</td>
@@ -234,7 +324,7 @@ export function Costeo() {
                 <td className="px-4 py-3 text-right">
                   <button
                     onClick={() => abrirDetalle(p)}
-                    className="text-xs px-3 py-1 rounded-full bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors whitespace-nowrap"
                   >
                     Ver detalle
                   </button>
