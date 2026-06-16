@@ -3,11 +3,14 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   MdDashboard, MdTableBar, MdOutlineInventory2, MdMenuBook,
   MdBarChart, MdPeople, MdSettings, MdLogout, MdReceipt,
+  MdOutlineCalculate,
 } from 'react-icons/md';
 
 type SidebarProps = { onNavigate?: () => void };
 
-const OPERATION = [
+type NavItemDef = { to: string; icon: React.ReactElement; label: string; badge?: number };
+
+const OPERATION: NavItemDef[] = [
   { to: '/dashboard', icon: <MdDashboard size={18} />,        label: 'Dashboard' },
   { to: '/mesas',     icon: <MdTableBar size={18} />,          label: 'Mesas' },
   { to: '/pedidos',   icon: <MdReceipt size={18} />,           label: 'Pedidos', badge: 3 },
@@ -15,10 +18,11 @@ const OPERATION = [
   { to: '/inventario',icon: <MdOutlineInventory2 size={18} />, label: 'Inventario' },
 ];
 
-const ADMIN = [
-  { to: '/reportes',  icon: <MdBarChart size={18} />,  label: 'Reportes' },
-  { to: '/personal',  icon: <MdPeople size={18} />,    label: 'Personal' },
-  { to: '/ajustes',   icon: <MdSettings size={18} />,  label: 'Configuración' },
+const ADMIN: NavItemDef[] = [
+  { to: '/reportes',  icon: <MdBarChart size={18} />,        label: 'Reportes' },
+  { to: '/costeo',    icon: <MdOutlineCalculate size={18} />, label: 'Costeo Menú' },
+  { to: '/personal',  icon: <MdPeople size={18} />,          label: 'Personal' },
+  { to: '/ajustes',   icon: <MdSettings size={18} />,        label: 'Configuración' },
 ];
 
 const LINK_BASE =
@@ -41,7 +45,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function NavItem({
   item, onNavigate,
 }: {
-  item: typeof OPERATION[0] & { badge?: number };
+  item: NavItemDef;
   onNavigate?: () => void;
 }) {
   return (
