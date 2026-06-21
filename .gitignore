@@ -1,5 +1,59 @@
+# ====================================
+# 🚫 Archivos y carpetas a ignorar
+# ====================================
+
+# Dependencias
 node_modules/
+
+# Build
 dist/
+build/
+
+# Archivos de logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Entornos / configuración local
 .env
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Archivos de IDE (Visual Studio Code, JetBrains, etc.)
+.vscode/
+.idea/
+*.swp
+
+# Cache
+.cache/
+.tmp/
+out/
+
+# Archivos de lock alternativos (si usas otro gestor)
+pnpm-lock.yaml
+yarn.lock
+
+# Git
+.gitignore
+
+# TypeScript
+*.tsbuildinfo
+
+# Archivos de pruebas
+coverage/
+
+# Otros posibles directorios temporales
+*.log
+*.bak
+*.old
+
+# Hostinger (si usas despliegue manual)
+public_html/
+uploads/

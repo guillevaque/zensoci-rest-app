@@ -1,126 +1,67 @@
 import React, { useState } from 'react';
-import { MdAdd, MdEdit, MdPeople } from 'react-icons/md';
+import { FiUserPlus } from 'react-icons/fi';
 
-type Role = 'admin' | 'manager' | 'staff';
-
-type Staff = {
-  id: number;
-  name: string;
-  email: string;
-  role: Role;
-  position: string;
-  status: 'active' | 'inactive';
-  color: string;
-};
-
-const STAFF: Staff[] = [
-  { id: 1, name: 'Andrés García',   email: 'andres@zensoci.com',   role: 'staff',   position: 'Mesero',  status: 'active', color: '#D86835' },
-  { id: 2, name: 'Marisol Torres',  email: 'marisol@zensoci.com',  role: 'staff',   position: 'Cajera',  status: 'active', color: '#3C6030' },
-  { id: 3, name: 'Carlos Medina',   email: 'carlos@zensoci.com',   role: 'staff',   position: 'Cocina',  status: 'active', color: '#5B8C3A' },
-  { id: 4, name: 'Lucía Ramírez',   email: 'lucia@zensoci.com',    role: 'staff',   position: 'Mesera',  status: 'active', color: '#C0392B' },
-  { id: 5, name: 'Pablo Vásquez',   email: 'pablo@zensoci.com',    role: 'manager', position: 'Manager', status: 'active', color: '#2C3E50' },
-  { id: 6, name: 'Sofía Jiménez',   email: 'sofia@zensoci.com',    role: 'staff',   position: 'Mesera',  status: 'active', color: '#E07B54' },
-  { id: 7, name: 'Admin Zensoci',   email: 'admin@zensoci.com',    role: 'admin',   position: 'Admin',   status: 'active', color: '#1C2B1A' },
+const COLORS = ['#D86835','#3C6030','#5B8C3A','#C0392B','#2C3E50','#E07B54'];
+const STAFF = [
+  { id:1, name:'Andrés García',  role:'Mesero',  status:'En turno', shift:'10:00 – 18:00', color:'#D86835' },
+  { id:2, name:'Marisol Torres', role:'Cajera',  status:'En turno', shift:'09:00 – 17:00', color:'#3C6030' },
+  { id:3, name:'Carlos Medina',  role:'Cocina',  status:'En turno', shift:'08:00 – 16:00', color:'#5B8C3A' },
+  { id:4, name:'Lucía Ramírez',  role:'Mesera',  status:'Libre',    shift:'–',              color:'#C0392B' },
+  { id:5, name:'Pablo Vásquez',  role:'Manager', status:'En turno', shift:'09:00 – 21:00', color:'#2C3E50' },
+  { id:6, name:'Sofía Jiménez',  role:'Mesera',  status:'En turno', shift:'14:00 – 22:00', color:'#E07B54' },
 ];
 
-const ROLE_BADGE: Record<Role, { label: string; bg: string; color: string }> = {
-  admin:   { label: 'Admin',   bg: '#FEF3EE', color: '#D86835' },
-  manager: { label: 'Manager', bg: '#DBE4FF', color: '#3451B2' },
-  staff:   { label: 'Staff',   bg: '#EEF4EC', color: '#3C6030' },
-};
+type Filter = 'Todos'|'Meseros'|'Cocina'|'Admin';
 
 export default function Personal() {
-  const [staff] = useState<Staff[]>(STAFF);
+  const [filter, setFilter] = useState<Filter>('Todos');
+  const filtered = STAFF.filter(s => {
+    if (filter === 'Meseros') return s.role === 'Mesero' || s.role === 'Mesera';
+    if (filter === 'Cocina')  return s.role === 'Cocina';
+    if (filter === 'Admin')   return s.role === 'Manager';
+    return true;
+  });
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="page-title">PERSONAL</h1>
-          <p className="page-subtitle">Gestión de usuarios y accesos</p>
+    <div className="space-y-3">
+      {/* Header – apilado en móvil */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {(['Todos','Meseros','Cocina','Admin'] as Filter[]).map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              style={{ fontFamily: 'var(--zs-font-mono)', fontWeight: 700, fontSize: 12, padding: '7px 12px', borderRadius: 999, cursor: 'pointer', background: filter === f ? 'var(--zs-green)' : '#fff', color: filter === f ? 'var(--zs-paper)' : 'var(--zs-ink)', border: filter === f ? '1px solid var(--zs-green)' : '1px solid var(--zs-line-strong)', whiteSpace: 'nowrap' }}>
+              {f}
+            </button>
+          ))}
         </div>
-        <button className="btn btn-primary">
-          <MdAdd size={16} /> Nuevo Usuario
+        <button style={{ fontFamily: 'var(--zs-font-display)', background: 'var(--zs-accent2)', color: '#fff', border: 0, padding: '9px 16px', borderRadius: 12, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, whiteSpace: 'nowrap', alignSelf: 'flex-start' }}>
+          <FiUserPlus size={16} /> Agregar persona
         </button>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: 'Total personal', value: staff.length, icon: '👥' },
-          { label: 'Activos hoy',    value: staff.filter(s => s.status === 'active').length, icon: '✅' },
-          { label: 'Managers',       value: staff.filter(s => s.role === 'manager' || s.role === 'admin').length, icon: '⭐' },
-        ].map((s, i) => (
-          <div key={i} className="card flex items-center gap-4">
-            <div className="w-11 h-11 rounded-zs flex items-center justify-center text-xl flex-shrink-0" style={{ background: '#EEF4EC' }}>
-              {s.icon}
+      {/* Tabla con scroll horizontal en móvil */}
+      <div style={{ background: '#fff', border: '1px solid var(--zs-line)', borderRadius: 16, overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <div style={{ minWidth: 560 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '56px 1.6fr 1fr 1fr 1fr 80px', gap: 10, padding: '10px 16px', background: 'var(--zs-cream)', fontFamily: 'var(--zs-font-mono)', fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--zs-mute)' }}>
+              <span></span><span>Nombre</span><span>Rol</span><span>Estado</span><span>Turno</span><span></span>
             </div>
-            <div>
-              <div className="font-black text-2xl" style={{ color: '#1C2B1A' }}>{s.value}</div>
-              <div className="text-xs" style={{ color: '#6B7A69' }}>{s.label}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Staff table */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <table className="zs-table">
-          <thead>
-            <tr>
-              <th>Usuario</th>
-              <th>Email</th>
-              <th>Cargo</th>
-              <th>Rol</th>
-              <th>Estado</th>
-              <th style={{ width: 80 }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {staff.map(s => {
-              const rb = ROLE_BADGE[s.role];
-              return (
-                <tr key={s.id}>
-                  <td>
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                        style={{ background: s.color, color: '#fff' }}
-                      >
-                        {s.name[0]}
-                      </div>
-                      <span className="font-semibold text-sm" style={{ color: '#1C2B1A' }}>{s.name}</span>
-                    </div>
-                  </td>
-                  <td className="text-sm" style={{ color: '#6B7A69' }}>{s.email}</td>
-                  <td className="text-sm" style={{ color: '#1C2B1A' }}>{s.position}</td>
-                  <td>
-                    <span className="badge" style={{ background: rb.bg, color: rb.color }}>{rb.label}</span>
-                  </td>
-                  <td>
-                    <span className="badge badge-green">{s.status === 'active' ? 'Activo' : 'Inactivo'}</span>
-                  </td>
-                  <td className="text-right">
-                    <button className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '4px 10px' }}>
-                      <MdEdit size={13} /> Editar
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Info card */}
-      <div className="card flex gap-4 items-start" style={{ background: '#EEF4EC', border: '1px solid #D6E8D1' }}>
-        <div className="w-10 h-10 rounded-zs flex items-center justify-center flex-shrink-0" style={{ background: '#3C6030' }}>
-          <MdPeople size={20} style={{ color: '#fff' }} />
-        </div>
-        <div>
-          <div className="font-bold text-sm" style={{ color: '#1C2B1A' }}>Gestión de accesos por PIN</div>
-          <div className="text-xs mt-0.5" style={{ color: '#3C6030' }}>
-            Cada usuario tiene un PIN de 4 dígitos para ingresar al sistema. Los PINs se gestionan desde el panel de administración de Hostinger. Próximamente podrás cambiarlos desde aquí.
+            {filtered.map((s, idx) => (
+              <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '56px 1.6fr 1fr 1fr 1fr 80px', gap: 10, padding: '12px 16px', alignItems: 'center', fontFamily: 'var(--zs-font-mono)', fontSize: 13, borderBottom: idx < filtered.length-1 ? '1px solid var(--zs-line)' : 'none' }}>
+                <div style={{ width: 40, height: 40, borderRadius: 999, background: s.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--zs-font-display)', fontSize: 16 }}>
+                  {s.name[0]}
+                </div>
+                <span><strong>{s.name}</strong></span>
+                <span style={{ color: 'var(--zs-mute)' }}>{s.role}</span>
+                <span>
+                  <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: s.status === 'En turno' ? 'rgba(109,151,71,0.18)' : 'rgba(110,102,96,0.12)', color: s.status === 'En turno' ? 'var(--zs-green)' : 'var(--zs-mute)' }}>
+                    {s.status}
+                  </span>
+                </span>
+                <span style={{ color: 'var(--zs-mute)' }}>{s.shift}</span>
+                <span style={{ textAlign: 'right', color: 'var(--zs-mute)', cursor: 'pointer' }}>Ver →</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

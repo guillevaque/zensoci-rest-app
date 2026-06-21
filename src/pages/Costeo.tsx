@@ -13,10 +13,11 @@ function usd(v: number | null | undefined) {
   return `$${Number(v).toFixed(2)}`
 }
 
-/** Costo vivo de un ingrediente aplicando merma */
+/** Costo vivo de un ingrediente aplicando merma (usa precio_unitario_actual del catálogo) */
 function liveCosto(ing: CosteoIngrediente): number | null {
-  if (ing.precio_unitario_actual == null || ing.cantidad == null) return null
-  return ing.cantidad * ing.precio_unitario_actual * (1 + (ing.porcentaje_merma ?? 0))
+  const precioVivo = ing.precio_unitario_actual ?? ing.unit_cost ?? null
+  if (precioVivo == null || ing.cantidad == null) return null
+  return ing.cantidad * precioVivo * (1 + (ing.porcentaje_merma ?? 0))
 }
 
 function MargenBadge({ valor }: { valor: number | null }) {
@@ -49,12 +50,12 @@ function DeltaBadge({ snapshot, live }: { snapshot: number | null; live: number 
 }
 
 function IngredientesDrawer({ platillo, onClose }: { platillo: CosteoPlatillo; onClose: () => void }) {
-  const principales = platillo.ingredientes?.filter(i => i.tipo === 'principal') ?? []
-  const secundarios = platillo.ingredientes?.filter(i => i.tipo === 'secundario') ?? []
-  const empaque = platillo.ingredientes?.filter(i => i.tipo === 'empaque') ?? []
+  const principales = platillo.ingredientes?.filter(i => i.tipo_receta === 'principal') ?? []
+  const secundarios = platillo.ingredientes?.filter(i => i.tipo_receta === 'secundario') ?? []
+  const empaque = platillo.ingredientes?.filter(i => i.tipo_receta === 'empaque') ?? []
 
   const allIngs = platillo.ingredientes ?? []
-  const totalSnapshot = allIngs.reduce((sum, i) => sum + (i.costo_ingrediente ?? 0), 0)
+  const totalSnapshot = allIngs.reduce((sum, i) => sum + (i.costo_linea_ref ?? 0), 0)
   const totalLive = allIngs.reduce<number | null>((sum, i) => {
     const lc = liveCosto(i)
     if (lc == null) return sum  // si alguno no tiene costo vivo, ignora
@@ -83,12 +84,12 @@ function IngredientesDrawer({ platillo, onClose }: { platillo: CosteoPlatillo; o
                 const lc = liveCosto(ing)
                 return (
                   <tr key={ing.id} className="border-b border-gray-50 hover:bg-gray-50">
-                    <td className="py-1.5 pr-2 text-gray-800">{ing.nombre_ingrediente}</td>
+                    <td className="py-1.5 pr-2 text-gray-800">{ing.name}</td>
                     <td className="py-1.5 text-right text-gray-500 whitespace-nowrap text-xs">
                       {ing.cantidad != null ? `${ing.cantidad} ${ing.unidad_medida ?? ''}` : '—'}
                     </td>
                     <td className="py-1.5 text-right font-mono text-gray-500">
-                      {usd(ing.costo_ingrediente)}
+                      {usd(ing.costo_linea_ref)}
                     </td>
                     {hasLive && (
                       <td className={`py-1.5 text-right font-mono font-medium ${lc == null ? 'text-gray-300' : 'text-gray-800'}`}>
@@ -97,7 +98,7 @@ function IngredientesDrawer({ platillo, onClose }: { platillo: CosteoPlatillo; o
                     )}
                     {hasLive && (
                       <td className="py-1.5 text-right">
-                        <DeltaBadge snapshot={ing.costo_ingrediente} live={lc} />
+                        <DeltaBadge snapshot={ing.costo_linea_ref} live={lc} />
                       </td>
                     )}
                   </tr>

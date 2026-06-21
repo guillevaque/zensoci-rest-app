@@ -1,41 +1,51 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import Layout from '../ui/Layout'
+import { AuthProvider } from '../auth/AuthContext'
+import ProtectedRoute  from '../auth/ProtectedRoute'
+import Layout from './Layout'
 
-import Login from '../pages/Login'
-import Dashboard from '../pages/Dashboard'
+import Login      from '../pages/Login'
+import Dashboard  from '../pages/Dashboard'
 import { GestionMesas } from '../pages/GestionMesas'
-import Pedidos from '../pages/Pedidos'
-import { GestionMenu } from '../pages/GestionMenu'
-import { Inventory } from '../pages/Inventory'
-import { Reports } from '../pages/Reports'
-import { Costeo } from '../pages/Costeo'
-import { Empaques } from '../pages/Empaques'
-import Personal from '../pages/Personal'
-import { Settings } from '../pages/Settings'
+import Pedidos    from '../pages/Pedidos'
+import { GestionMenu }  from '../pages/GestionMenu'
+import { Inventory }    from '../pages/Inventory'
+import { Reports }      from '../pages/Reports'
+import Personal   from '../pages/Personal'
+import { Settings }     from '../pages/Settings'
 
 export function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
+    <AuthProvider>
+      <Routes>
+        {/* Public */}
+        <Route path="/login" element={<Login />} />
 
-      <Route element={<Layout />}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard"  element={<Dashboard />} />
-        <Route path="/mesas"      element={<GestionMesas />} />
-        <Route path="/pedidos"    element={<Pedidos />} />
-        <Route path="/menu"       element={<GestionMenu />} />
-        <Route path="/inventario" element={<Inventory />} />
-        <Route path="/reportes"   element={<Reports />} />
-        <Route path="/costeo"     element={<Costeo />} />
-        <Route path="/empaques"   element={<Empaques />} />
-        <Route path="/personal"   element={<Personal />} />
-        <Route path="/ajustes"    element={<Settings />} />
-        {/* legacy redirect */}
-        <Route path="/pos"        element={<Navigate to="/pedidos" replace />} />
-      </Route>
+        {/* Protected — all require auth */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index                element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard"   element={<Dashboard />} />
+          <Route path="/mesas"        element={<GestionMesas />} />
+          <Route path="/pedidos"      element={<Pedidos />} />
+          <Route path="/menu"         element={<GestionMenu />} />
+          <Route path="/inventario"   element={<Inventory />} />
+          <Route path="/reportes"     element={<Reports />} />
+          <Route path="/personal"     element={<Personal />} />
+          <Route path="/ajustes"      element={<Settings />} />
 
-      <Route path="*" element={<div className="p-8 text-center" style={{ color: '#6B7A69' }}>Página no encontrada</div>} />
-    </Routes>
+          {/* Legacy redirect */}
+          <Route path="/pos"          element={<Navigate to="/pedidos" replace />} />
+        </Route>
+
+        {/* 404 */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </AuthProvider>
   )
 }

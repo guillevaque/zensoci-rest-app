@@ -1,7 +1,7 @@
 <?php
 // api/empaques.php
 // CRUD del catálogo de empaques de Zensoci POS.
-// Sube este archivo a tu carpeta /api/ en Hostinger (junto a ingredients.php).
+// Coloca este archivo en tu carpeta /api/ en Hostinger.
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -15,7 +15,6 @@ require_once __DIR__ . '/config.php'; // $pdo
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
-// Campos editables desde la app
 $FIELDS = ['name','category_label','brand','supplier','presentation','unit',
            'units_per_pack','purchase_price_no_iva','unit_cost','stock_qty','min_stock','activo'];
 
@@ -23,7 +22,7 @@ try {
     if ($method === 'GET') {
         $where  = ['activo = 1'];
         $params = [];
-        if (!empty($_GET['q'])) { $where[] = 'name LIKE ?'; $params[] = '%' . $_GET['q'] . '%'; }
+        if (!empty($_GET['q']))                     { $where[] = 'name LIKE ?'; $params[] = '%' . $_GET['q'] . '%'; }
         if (($_GET['filter'] ?? '') === 'bajo')     { $where[] = 'stock_qty > 0 AND stock_qty <= min_stock'; }
         if (($_GET['filter'] ?? '') === 'agotados') { $where[] = 'stock_qty <= 0'; }
 
@@ -61,7 +60,6 @@ try {
     }
 
     if ($method === 'DELETE' && $id) {
-        // Borrado lógico para no romper enlaces de costeo
         $pdo->prepare('UPDATE empaques SET activo = 0 WHERE id = ?')->execute([$id]);
         echo json_encode(['ok' => true]);
         exit;

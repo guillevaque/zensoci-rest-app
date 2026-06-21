@@ -1,63 +1,77 @@
 import React from 'react';
-import { MdSearch, MdOutlineNotifications, MdOutlinePrint, MdMenu } from 'react-icons/md';
+import { FiSearch, FiBell, FiPrinter, FiMenu } from 'react-icons/fi';
+import { useLocation } from 'react-router-dom';
 
 type Props = { onToggleMobile?: () => void };
 
-export default function SubHeader({ onToggleMobile }: Props) {
-  return (
-    <header
-      className="flex items-center justify-between px-4 md:px-6"
-      style={{
-        background: '#fff',
-        borderBottom: '1px solid #E2EAE0',
-        minHeight: 56,
-        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-      }}
-    >
-      <button
-        className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg"
-        style={{ color: '#3C6030', background: '#EEF4EC', border: 'none', cursor: 'pointer' }}
-        onClick={onToggleMobile}
-        aria-label="Abrir menú"
-      >
-        <MdMenu size={20} />
-      </button>
+const TITLES: Record<string, string> = {
+  '/dashboard':  'Dashboard',
+  '/mesas':      'Mesas',
+  '/pedidos':    'Pedidos',
+  '/menu':       'Menú',
+  '/inventario': 'Inventario',
+  '/reportes':   'Reportes',
+  '/personal':   'Personal',
+  '/ajustes':    'Configuración',
+};
 
-      <div className="flex items-center gap-2 ml-auto">
-        <div className="relative hidden md:block">
-          <MdSearch
-            size={16}
-            style={{
-              position: 'absolute', left: 10, top: '50%',
-              transform: 'translateY(-50%)', color: '#6B7A69', pointerEvents: 'none',
-            }}
-          />
-          <input
-            placeholder="Buscar mesa, pedido, plato…"
-            className="input"
-            style={{ paddingLeft: 32, width: 260, fontSize: '0.8125rem' }}
-          />
+export default function SubHeader({ onToggleMobile }: Props) {
+  const location = useLocation();
+  const title = TITLES[location.pathname] ?? 'Zensoci POS';
+
+  return (
+    <header style={{
+      background: 'var(--zs-cream)',
+      borderBottom: '1px solid var(--zs-line)',
+      height: 56,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      flexShrink: 0,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <button
+          className="md:hidden"
+          style={{ background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--zs-green)', display: 'flex', padding: 4 }}
+          onClick={onToggleMobile}
+          aria-label="Abrir menú"
+        >
+          {React.createElement(FiMenu, { size: 22 })}
+        </button>
+        <h1 style={{ fontFamily: 'var(--zs-font-display)', fontSize: 22, color: 'var(--zs-green)', margin: 0, lineHeight: 1 }}>
+          {title}
+        </h1>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Barra de búsqueda – oculta en móvil */}
+        <div className="hidden md:inline-flex" style={{
+          alignItems: 'center', gap: 8,
+          background: '#fff', border: '1px solid var(--zs-line)', borderRadius: 999,
+          padding: '7px 14px', minWidth: 200,
+          fontFamily: 'var(--zs-font-mono)', fontSize: 13, color: 'var(--zs-mute)',
+        }}>
+          {React.createElement(FiSearch, { size: 14 })}
+          Buscar mesa, pedido, plato…
         </div>
 
         <button
-          className="relative flex items-center justify-center w-9 h-9 rounded-lg"
-          style={{ background: '#EEF4EC', border: 'none', cursor: 'pointer', color: '#3C6030' }}
+          style={{ width: 36, height: 36, borderRadius: 999, background: '#fff', border: '1px solid var(--zs-line)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 }}
           aria-label="Notificaciones"
         >
-          <MdOutlineNotifications size={19} />
-          <span
-            className="absolute top-1 right-1 w-2 h-2 rounded-full"
-            style={{ background: '#D86835' }}
-          />
+          {React.createElement(FiBell, { size: 18, color: 'var(--zs-ink)' })}
+          <span style={{ position: 'absolute', top: 7, right: 7, width: 8, height: 8, background: 'var(--zs-accent2)', borderRadius: 999, border: '1.5px solid #fff' }} />
         </button>
 
+        {/* Imprimir – oculto en móvil */}
         <button
-          className="flex items-center justify-center w-9 h-9 rounded-lg"
-          style={{ background: '#EEF4EC', border: 'none', cursor: 'pointer', color: '#3C6030' }}
+          className="hidden md:flex"
+          style={{ width: 36, height: 36, borderRadius: 999, background: '#fff', border: '1px solid var(--zs-line)', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
           aria-label="Imprimir"
           onClick={() => window.print()}
         >
-          <MdOutlinePrint size={19} />
+          {React.createElement(FiPrinter, { size: 18, color: 'var(--zs-ink)' })}
         </button>
       </div>
     </header>
