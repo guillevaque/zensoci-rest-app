@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MdAdd, MdEdit } from 'react-icons/md';
 import MenuModal, { MenuForm } from '../components/MenuModal';
-import { http } from '../api/http';
+import { MenuAPI } from '../api/menu';
 
 type MenuItem = {
   id: number;
@@ -9,21 +9,20 @@ type MenuItem = {
   categoria: string;
   precio: number;
   descripcion?: string;
-  activo: number;
-  imagen?: string;
+  activo?: number;
 };
 
 const INITIAL_FORM: MenuForm = { nombre: '', categoria: '', precio: 0, descripcion: '', activo: 1 };
 
 const STOCK_BADGE: Record<string, { label: string; bg: string; color: string }> = {
   disponible: { label: 'Disponible', bg: '#DCFCE7', color: '#166534' },
-  bajo:       { label: 'Bajo',       bg: '#FEF9C3', color: '#854D0E' },
-  agotado:    { label: 'Agotado',    bg: '#FEE2E2', color: '#991B1B' },
+  agotado:    { label: 'No disponible', bg: '#FEE2E2', color: '#991B1B' },
 };
 
 export function GestionMenu() {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('Todos');
   const [modal, setModal] = useState<{ open: boolean; title: string; initial: MenuForm; id?: number }>({
@@ -33,9 +32,10 @@ export function GestionMenu() {
 
   const load = () => {
     setLoading(true);
-    http.get('/menu.php')
-      .then((data: any) => setItems(Array.isArray(data) ? data : data.data ?? []))
-      .catch(() => setItems(MOCK_MENU))
+    setError(null);
+    MenuAPI.list()
+      .then(data => setItems(data))
+      .catch(e => setError(e?.message || 'Error cargando menú'))
       .finally(() => setLoading(false));
   };
 
@@ -51,15 +51,15 @@ export function GestionMenu() {
 
   const openAdd = () => setModal({ open: true, title: 'Nuevo plato', initial: INITIAL_FORM });
   const openEdit = (item: MenuItem) =>
-    setModal({ open: true, title: 'Editar plato', initial: { ...item }, id: item.id });
+    setModal({ open: true, title: 'Editar plato', initial: { nombre: item.nombre, categoria: item.categoria, precio: item.precio, descripcion: item.descripcion, activo: item.activo }, id: item.id });
 
   const handleSubmit = async (form: MenuForm) => {
     setSaving(true);
     try {
       if (modal.id) {
-        await http.send('PUT', `/menu.php?id=${modal.id}`, form);
+        await MenuAPI.update(modal.id, form);
       } else {
-        await http.send('POST', '/menu.php', form);
+        await MenuAPI.create(form);
       }
       setModal(m => ({ ...m, open: false }));
       load();
@@ -67,6 +67,16 @@ export function GestionMenu() {
       alert('Error al guardar');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async (item: MenuItem) => {
+    if (!confirm(`¿Eliminar "${item.nombre}"?`)) return;
+    try {
+      await MenuAPI.remove(item.id);
+      load();
+    } catch {
+      alert('Error al eliminar');
     }
   };
 
@@ -109,16 +119,19 @@ export function GestionMenu() {
           <div className="py-12 flex justify-center">
             <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#3C6030', borderTopColor: 'transparent' }} />
           </div>
+        ) : error ? (
+          <div className="py-10 text-center" style={{ color: '#DC2626' }}>{error}</div>
         ) : (
-          <table className="zs-table">
+          <div className="overflow-x-auto">
+          <table className="zs-table" style={{ minWidth: 560 }}>
             <thead>
               <tr>
                 <th style={{ width: 56 }}></th>
                 <th>Plato</th>
                 <th>Categoría</th>
-                <th>Stock</th>
+                <th>Estado</th>
                 <th>Precio</th>
-                <th style={{ width: 100 }}></th>
+                <th style={{ width: 140 }}></th>
               </tr>
             </thead>
             <tbody>
@@ -147,21 +160,31 @@ export function GestionMenu() {
                     </td>
                     <td className="font-bold text-sm" style={{ color: '#D86835' }}>${Number(item.precio).toFixed(2)}</td>
                     <td className="text-right">
-                      <button
-                        className="btn btn-ghost"
-                        style={{ fontSize: '0.75rem', gap: 4 }}
-                        onClick={() => openEdit(item)}
-                      >
-                        <MdEdit size={13} /> Editar →
-                      </button>
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          className="btn btn-ghost"
+                          style={{ fontSize: '0.75rem', gap: 4 }}
+                          onClick={() => openEdit(item)}
+                        >
+                          <MdEdit size={13} /> Editar
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          style={{ fontSize: '0.75rem', padding: '0.25rem 0.75rem' }}
+                          onClick={() => handleDelete(item)}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+          </div>
         )}
-        {!loading && visible.length === 0 && (
+        {!loading && !error && visible.length === 0 && (
           <div className="py-12 text-center" style={{ color: '#6B7A69' }}>
             No hay platos{catFilter !== 'Todos' ? ` en "${catFilter}"` : ''}.
           </div>
@@ -179,15 +202,3 @@ export function GestionMenu() {
     </div>
   );
 }
-
-const MOCK_MENU: MenuItem[] = [
-  { id: 1, nombre: 'Hummus clásico',      categoria: 'Hummus', precio: 8.50, activo: 1 },
-  { id: 2, nombre: 'Hummus de remolacha', categoria: 'Hummus', precio: 9.00, activo: 1 },
-  { id: 3, nombre: 'Hummus de zanahoria', categoria: 'Hummus', precio: 9.00, activo: 1 },
-  { id: 4, nombre: 'Baba ganoush',        categoria: 'Hummus', precio: 8.50, activo: 1 },
-  { id: 5, nombre: 'Curry in a hurry',    categoria: 'Bowls',  precio: 12.00, activo: 1 },
-  { id: 6, nombre: 'Sunset bowl',         categoria: 'Bowls',  precio: 13.50, activo: 1 },
-  { id: 7, nombre: 'Garden bowl',         categoria: 'Bowls',  precio: 11.50, activo: 1 },
-  { id: 8, nombre: 'Macro bowl',          categoria: 'Bowls',  precio: 13.00, activo: 0 },
-  { id: 9, nombre: 'Pan pita',            categoria: 'Sides',  precio: 2.50, activo: 1 },
-];

@@ -1,68 +1,53 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
-  MdDashboard, MdTableBar, MdOutlineInventory2, MdMenuBook,
-  MdBarChart, MdPeople, MdSettings, MdLogout, MdReceipt,
-  MdOutlineCalculate, MdOutlineLocalMall,
-} from 'react-icons/md';
+  FiGrid, FiCoffee, FiFileText, FiBookOpen, FiPackage,
+  FiBarChart2, FiUsers, FiSettings, FiLogOut,
+} from 'react-icons/fi';
+import { useAuth } from '../auth/AuthContext';
 
 type SidebarProps = { onNavigate?: () => void };
 
-type NavItemDef = { to: string; icon: React.ReactElement; label: string; badge?: number };
-
-const OPERATION: NavItemDef[] = [
-  { to: '/dashboard', icon: <MdDashboard size={18} />,        label: 'Dashboard' },
-  { to: '/mesas',     icon: <MdTableBar size={18} />,          label: 'Mesas' },
-  { to: '/pedidos',   icon: <MdReceipt size={18} />,           label: 'Pedidos', badge: 3 },
-  { to: '/menu',      icon: <MdMenuBook size={18} />,          label: 'Menú' },
-  { to: '/inventario',icon: <MdOutlineInventory2 size={18} />, label: 'Inventario' },
-  { to: '/empaques',  icon: <MdOutlineLocalMall size={18} />,  label: 'Empaques' },
+const NAV = [
+  { to: '/dashboard',  icon: React.createElement(FiGrid,     { size: 18 }), label: 'Dashboard' },
+  { to: '/mesas',      icon: React.createElement(FiCoffee,   { size: 18 }), label: 'Mesas' },
+  { to: '/pedidos',    icon: React.createElement(FiFileText, { size: 18 }), label: 'Pedidos', badge: 3 },
+  { to: '/menu',       icon: React.createElement(FiBookOpen, { size: 18 }), label: 'Menú' },
+  { to: '/inventario', icon: React.createElement(FiPackage,  { size: 18 }), label: 'Inventario' },
+];
+const ADMIN = [
+  { to: '/reportes', icon: React.createElement(FiBarChart2, { size: 18 }), label: 'Reportes' },
+  { to: '/personal', icon: React.createElement(FiUsers,     { size: 18 }), label: 'Personal' },
+  { to: '/ajustes',  icon: React.createElement(FiSettings,  { size: 18 }), label: 'Configuración' },
 ];
 
-const ADMIN: NavItemDef[] = [
-  { to: '/reportes',  icon: <MdBarChart size={18} />,        label: 'Reportes' },
-  { to: '/costeo',    icon: <MdOutlineCalculate size={18} />, label: 'Costeo Menú' },
-  { to: '/personal',  icon: <MdPeople size={18} />,          label: 'Personal' },
-  { to: '/ajustes',   icon: <MdSettings size={18} />,        label: 'Configuración' },
-];
+const SECTION: React.CSSProperties = {
+  fontFamily: 'var(--zs-font-mono)', fontWeight: 700, fontSize: 10,
+  letterSpacing: '0.16em', textTransform: 'uppercase',
+  opacity: 0.55, padding: '14px 12px 6px', color: 'var(--zs-paper)',
+};
 
-const LINK_BASE =
-  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer select-none';
-const LINK_IDLE  = { color: 'rgba(255,255,255,0.72)' };
-const LINK_HOVER = '#EEF4EC22';
-const LINK_ACTIVE = { background: '#D86835', color: '#fff', borderRadius: 10 };
+const COLORS = ['#D86835','#3C6030','#5B8C3A','#C0392B','#2C3E50','#E07B54'];
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p
-      className="px-3 pt-5 pb-1 text-xs font-bold tracking-widest uppercase select-none"
-      style={{ color: 'rgba(255,255,255,0.35)' }}
-    >
-      {children}
-    </p>
-  );
-}
-
-function NavItem({
-  item, onNavigate,
-}: {
-  item: NavItemDef;
-  onNavigate?: () => void;
-}) {
+function NavItem({ item, onNavigate }: { item: (typeof NAV)[0] & { badge?: number }; onNavigate?: () => void }) {
   return (
     <NavLink
       to={item.to}
       onClick={onNavigate}
-      className={({ isActive }) => LINK_BASE + (isActive ? '' : ' hover:bg-white/10')}
-      style={({ isActive }) => isActive ? LINK_ACTIVE : LINK_IDLE}
+      style={({ isActive }) => ({
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '11px 12px', borderRadius: 12,
+        background: isActive ? 'var(--zs-accent2)' : 'transparent',
+        color: 'var(--zs-paper)',
+        fontFamily: 'var(--zs-font-mono)', fontWeight: 700, fontSize: 14,
+        textDecoration: 'none',
+      })}
+      className={({ isActive }) => isActive ? '' : 'hover:bg-white/[0.08]'}
     >
-      <span className="flex-shrink-0">{item.icon}</span>
-      <span className="flex-1">{item.label}</span>
-      {item.badge != null && item.badge > 0 && (
-        <span
-          className="ml-auto text-xs font-bold rounded-full px-1.5 py-0.5"
-          style={{ background: '#D86835', color: '#fff', minWidth: 20, textAlign: 'center' }}
-        >
+      <span style={{ opacity: 0.85, flexShrink: 0, display: 'flex' }}>{item.icon}</span>
+      <span style={{ flex: 1 }}>{item.label}</span>
+      {(item.badge ?? 0) > 0 && (
+        <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', fontFamily: 'var(--zs-font-mono)', fontWeight: 700, fontSize: 10, padding: '2px 7px', borderRadius: 999 }}>
           {item.badge}
         </span>
       )}
@@ -71,62 +56,40 @@ function NavItem({
 }
 
 export default function Sidebar({ onNavigate }: SidebarProps) {
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    navigate('/login');
-  };
+  const { user, logout } = useAuth();
+  const avatarColor = COLORS[(Number((user as any)?.id ?? 0)) % COLORS.length];
 
   return (
-    <aside
-      className="hidden md:flex flex-col fixed left-0 top-0 z-40 h-full"
-      style={{ width: 210, background: '#3C6030' }}
-    >
-      {/* Logo */}
-      <div className="px-4 py-5 flex-shrink-0">
-        <div className="font-black text-white tracking-tight" style={{ fontSize: '1.25rem' }}>
-          ZENSOCI
-        </div>
-        <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)', letterSpacing: '0.12em' }}>
-          COCINA VEGANA
-        </div>
+    <aside className="hidden md:flex flex-col fixed left-0 top-0 z-40 h-full"
+      style={{ width: 220, background: 'var(--zs-green)', padding: '18px 14px' }}>
+
+      <div style={{ padding: '4px 8px 14px' }}>
+        <img src="/assets/logo-horizontal-paper-tagline.png" alt="Zensoci" style={{ height: 42, objectFit: 'contain' }} />
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-2 overflow-y-auto">
-        <SectionLabel>Operación</SectionLabel>
-        {OPERATION.map(item => (
-          <NavItem key={item.to} item={item} onNavigate={onNavigate} />
-        ))}
-
-        <SectionLabel>Administración</SectionLabel>
-        {ADMIN.map(item => (
-          <NavItem key={item.to} item={item} onNavigate={onNavigate} />
-        ))}
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+        <div style={SECTION}>Operación</div>
+        {NAV.map(i => <NavItem key={i.to} item={i} onNavigate={onNavigate} />)}
+        <div style={SECTION}>Administración</div>
+        {ADMIN.map(i => <NavItem key={i.to} item={i} onNavigate={onNavigate} />)}
       </nav>
 
-      {/* User footer */}
-      <div
-        className="flex items-center gap-3 px-3 py-4 flex-shrink-0"
-        style={{ borderTop: '1px solid rgba(255,255,255,0.12)' }}
-      >
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-          style={{ background: '#D86835', color: '#fff' }}
-        >
-          A
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(0,0,0,0.15)', borderRadius: 14 }}>
+        <div style={{ width: 34, height: 34, borderRadius: 999, background: avatarColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--zs-font-display)', fontSize: 16, flexShrink: 0 }}>
+          {(user?.name ?? 'U')[0].toUpperCase()}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-white truncate">Andrés</div>
-          <div className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.5)' }}>Mesero</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--zs-font-mono)', fontWeight: 700, fontSize: 13, color: 'var(--zs-paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {user?.name ?? 'Usuario'}
+          </div>
+          <div style={{ fontFamily: 'var(--zs-font-mono)', fontSize: 11, opacity: 0.7, color: 'var(--zs-paper)', textTransform: 'capitalize' }}>
+            {user?.role ?? ''}
+          </div>
         </div>
-        <button
-          onClick={handleLogout}
-          className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg"
-          style={{ background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.7)' }}
-          aria-label="Cerrar sesión"
-        >
-          <MdLogout size={16} />
+        <button onClick={logout}
+          style={{ background: 'transparent', border: 0, color: 'var(--zs-paper)', cursor: 'pointer', opacity: 0.7, padding: 4, display: 'flex' }}
+          aria-label="Cerrar sesión">
+          {React.createElement(FiLogOut, { size: 18 })}
         </button>
       </div>
     </aside>

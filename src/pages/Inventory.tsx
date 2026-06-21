@@ -1,5 +1,5 @@
 import React from 'react'
-import { listIngredientes, crearIngrediente, editarIngrediente, eliminarIngrediente, type Ingrediente } from '../lib/api'
+import { IngredientsService, type Ingredient as Ingrediente } from '../services/ingredients.service'
 import IngredientModal, { type IngredienteForm } from '../components/IngredientModal'
 import { MdOutlineInventory2, MdDownload, MdAdd } from 'react-icons/md'
 
@@ -22,17 +22,17 @@ export const Inventory: React.FC = () => {
   const openEdit = (row: Ingrediente) => { setEditing(row); setOpen(true) }
 
   const handleCreate = async (values: IngredienteForm) => {
-    await crearIngrediente(values)
+    await IngredientsService.create(values)
     await cargar(busqueda, filtro)
   }
   const handleUpdate = async (values: IngredienteForm) => {
     if (!editing) return
-    await editarIngrediente(editing.id, values)
+    await IngredientsService.update(editing.id, values)
     await cargar(busqueda, filtro)
   }
   const handleDelete = async (row: Ingrediente) => {
     if (!confirm(`Eliminar ${row.nombre}?`)) return
-    await eliminarIngrediente(row.id)
+    await IngredientsService.remove(row.id)
     await cargar(busqueda, filtro)
   }
 
@@ -40,7 +40,7 @@ export const Inventory: React.FC = () => {
     try {
       setLoading(true); setError(null)
       const filterParam = f === 'todos' ? undefined : f
-      const rows = await listIngredientes({ q, filter: filterParam as any })
+      const rows = await IngredientsService.list({ q, filter: filterParam as any })
       setData(rows)
     } catch (e: any) {
       setError(e?.message || 'Error cargando inventario')

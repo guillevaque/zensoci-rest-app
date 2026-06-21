@@ -1,51 +1,50 @@
-import React from 'react'
-import { TbReportAnalytics } from 'react-icons/tb'
-import { MdTrendingUp, MdBarChart, MdReceipt } from 'react-icons/md'
+import React, { useState } from 'react';
+import { FiDollarSign, FiPercent, FiTrendingUp, FiCreditCard, FiDownload } from 'react-icons/fi';
 
-const upcomingReports = [
-  { icon: <MdTrendingUp size={22} />, title: 'Ventas por día', desc: 'Visualiza las ventas diarias y tendencias.' },
-  { icon: <MdBarChart size={22} />,   title: 'Productos más vendidos', desc: 'Identifica los platillos con más salida.' },
-  { icon: <MdReceipt size={22} />,    title: 'IVA y libros DTE', desc: 'Generación de libros fiscales (próximamente).' },
-]
+const money = (n: number) => `$${n.toFixed(2)}`;
+type Period = 'Hoy'|'Esta semana'|'Mes'|'Año';
 
-export const Reports: React.FC = () => {
+export function Reports() {
+  const [period, setPeriod] = useState<Period>('Hoy');
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="page-title">Reportes</h1>
-        <p className="page-subtitle">Análisis y estadísticas de tu restaurante</p>
+    <div className="space-y-3">
+      {/* Header – apilado en móvil */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {(['Hoy','Esta semana','Mes','Año'] as Period[]).map(p => (
+            <button key={p} onClick={() => setPeriod(p)}
+              style={{ fontFamily: 'var(--zs-font-mono)', fontWeight: 700, fontSize: 12, padding: '7px 12px', borderRadius: 999, cursor: 'pointer', background: period === p ? 'var(--zs-green)' : '#fff', color: period === p ? 'var(--zs-paper)' : 'var(--zs-ink)', border: period === p ? '1px solid var(--zs-green)' : '1px solid var(--zs-line-strong)', whiteSpace: 'nowrap' }}>
+              {p}
+            </button>
+          ))}
+        </div>
+        <button style={{ fontFamily: 'var(--zs-font-display)', background: 'var(--zs-accent2)', color: '#fff', border: 0, padding: '9px 16px', borderRadius: 12, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, whiteSpace: 'nowrap', alignSelf: 'flex-start' }}>
+          <FiDownload size={16} /> Exportar CSV
+        </button>
       </div>
 
-      <div className="card flex flex-col items-center justify-center py-14 gap-4" style={{ borderStyle: 'dashed' }}>
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center"
-          style={{ background: '#EEF4EC' }}
-        >
-          <TbReportAnalytics size={32} style={{ color: '#3C6030' }} />
-        </div>
-        <div className="text-center">
-          <p className="font-semibold text-lg" style={{ color: '#1C2B1A' }}>Módulo en desarrollo</p>
-          <p className="text-sm mt-1" style={{ color: '#6B7A69' }}>Los reportes estarán disponibles próximamente</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {upcomingReports.map((r, i) => (
-          <div key={i} className="card flex gap-4 items-start opacity-60">
-            <div
-              className="w-11 h-11 rounded-zs flex items-center justify-center flex-shrink-0"
-              style={{ background: '#EEF4EC', color: '#3C6030' }}
-            >
-              {r.icon}
-            </div>
-            <div>
-              <div className="font-semibold text-sm" style={{ color: '#1C2B1A' }}>{r.title}</div>
-              <div className="text-xs mt-0.5" style={{ color: '#6B7A69' }}>{r.desc}</div>
-              <span className="badge badge-blue mt-2" style={{ fontSize: '0.65rem' }}>Próximamente</span>
-            </div>
+      {/* Stat cards – 2 columnas en móvil, 4 en desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { icon: <FiDollarSign size={18}/>, label:'Ventas brutas',        value: money(612.40), delta:'+12%',              up:true },
+          { icon: <FiPercent size={18}/>,    label:'Impuestos',            value: money(79.61),  delta:'13% del subtotal',  up:null },
+          { icon: <FiTrendingUp size={18}/>, label:'Propinas',             value: money(94.20),  delta:'+8%',               up:true },
+          { icon: <FiCreditCard size={18}/>, label:'Tarjeta vs. efectivo', value:'68 / 32%',     delta:'predomina tarjeta', up:null },
+        ].map((s, i) => (
+          <div key={i} style={{ background: '#fff', border: '1px solid var(--zs-line)', borderRadius: 18, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 6, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 12, right: 12, width: 34, height: 34, borderRadius: 10, background: 'var(--zs-cream)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--zs-accent2)' }}>{s.icon}</div>
+            <span style={{ fontFamily: 'var(--zs-font-mono)', fontWeight: 700, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--zs-mute)' }}>{s.label}</span>
+            <span style={{ fontFamily: 'var(--zs-font-display)', fontSize: 28, lineHeight: 1, color: 'var(--zs-ink)' }}>{s.value}</span>
+            <span style={{ fontFamily: 'var(--zs-font-mono)', fontSize: 11, color: s.up === true ? 'var(--zs-green)' : s.up === false ? 'var(--zs-red)' : 'var(--zs-mute)' }}>{s.delta}</span>
           </div>
         ))}
       </div>
+
+      <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--zs-mute)' }}>
+        <img src="/assets/illustrations/sun.png" alt="" style={{ width: 140, margin: '0 auto 12px', display: 'block', opacity: 0.85 }} onError={e => { e.currentTarget.style.display='none'; }} />
+        <h2 style={{ fontFamily: 'var(--zs-font-display)', color: 'var(--zs-green)', fontSize: 24, margin: 0 }}>Más reportes próximamente</h2>
+        <p style={{ fontFamily: 'var(--zs-font-mono)', fontSize: 13, margin: '8px 0 0' }}>Productividad por mesero, hora-pico, comparativas semanales y desperdicio.</p>
+      </div>
     </div>
-  )
+  );
 }
