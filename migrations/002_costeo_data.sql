@@ -55,10 +55,10 @@ ON DUPLICATE KEY UPDATE
 -- Fuente: Excel hoja "Ingredientes" — costo unitario sin IVA
 -- ────────────────────────────────────────────────────────────
 INSERT INTO `ingredientes`
-  (name, tipo, unit, unit_cost, category_label,
+  (nombre, tipo, unidad, costo_unitario, categoria,
    marca, presentacion_compra, proveedor,
    peso_unitario, unidad_medida_compra,
-   precio_compra_con_iva, precio_compra_sin_iva,
+   precio_compra, precio_compra_sin_iva,
    tipo_envoltorio, temperatura_compra,
    unidades_por_caja, peso_neto_compra)
 VALUES
@@ -105,11 +105,11 @@ VALUES
   ('Aceite de sesamo',                'ingrediente', 'Gramos',   0.02989715, 'Aceites',       NULL,              'Bote de 185 ml',                     NULL,                    185.00, 'Gramos',   6.25,  5.5310, NULL,                 'Ambiente',    1,   185.00),
   ('Pan de masa madre',               'subreceta',   'Unidad',   0.63211125, 'Subrecetas',    NULL,              'Entero (7 porciones)',                NULL,                      7.00, 'Unidad',   5.00,  4.4248, NULL,                 'Ambiente',    1,     7.00)
 ON DUPLICATE KEY UPDATE
-  unit_cost             = VALUES(unit_cost),
+  costo_unitario        = VALUES(costo_unitario),
   marca                 = VALUES(marca),
   presentacion_compra   = VALUES(presentacion_compra),
   proveedor             = VALUES(proveedor),
-  precio_compra_con_iva = VALUES(precio_compra_con_iva),
+  precio_compra         = VALUES(precio_compra),
   precio_compra_sin_iva = VALUES(precio_compra_sin_iva);
 
 
@@ -118,11 +118,11 @@ ON DUPLICATE KEY UPDATE
 -- Fuente: Excel hoja "Humus clasico" (sheet12)
 -- ────────────────────────────────────────────────────────────
 INSERT INTO `ingredientes`
-  (name, tipo, tipo_receta, costeo_platillo_id,
+  (nombre, tipo, tipo_receta, costeo_platillo_id,
    cantidad, unidad_medida, porcentaje_merma,
-   precio_unitario_ref, costo_linea_ref, unit_cost, unit)
+   precio_ref, costo_linea, costo_unitario, unidad)
 SELECT
-  v.name, 'ingrediente', v.tipo_receta,
+  v.nombre, 'ingrediente', v.tipo_receta,
   cp.id,
   v.cantidad, v.unidad_medida, v.merma,
   v.precio_ref, v.costo_linea, v.precio_ref, v.unidad_medida
@@ -137,6 +137,6 @@ FROM (VALUES
   ROW('Sirope de agave',                    'principal',   4.0, 'gramos', 0.0, 0.01086726, 0.043469),
   ROW('Ajo',                                'principal',   9.0, 'gramos', 0.0, 0.00613259, 0.055193),
   ROW('Pan de masa madre',                  'secundario',  1.0, 'Unidad', 0.0, 0.63211125, 0.632111)
-) AS v(name, tipo_receta, cantidad, unidad_medida, merma, precio_ref, costo_linea)
+) AS v(nombre, tipo_receta, cantidad, unidad_medida, merma, precio_ref, costo_linea)
 CROSS JOIN `costeo_platillos` cp
 WHERE cp.numero_menu = 3;

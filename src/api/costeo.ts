@@ -4,20 +4,20 @@ import { http } from './http'
 export type CosteoIngrediente = {
   id: number
   // Campos de la tabla unificada `ingredientes` (filas con costeo_platillo_id)
-  name: string                                              // nombre del ingrediente
-  tipo: 'ingrediente' | 'subreceta' | 'empaque'            // tipo de catálogo
-  tipo_receta: 'principal' | 'secundario' | 'empaque' | null // rol en la receta
+  nombre: string
+  tipo: 'ingrediente' | 'subreceta' | 'empaque'
+  tipo_receta: 'principal' | 'secundario' | 'empaque' | null
   cantidad: number | null
   unidad_medida: string | null
   porcentaje_merma: number
-  precio_unitario_ref: number | null   // precio snapshot (costeo original)
-  costo_linea_ref: number | null       // costo total de la línea snapshot
-  // Costo vivo del catálogo (self-join en costeo.php)
+  precio_ref: number | null         // precio snapshot (costeo original)
+  costo_linea: number | null        // costo total de la línea snapshot
+  // Costo vivo del catálogo (calculado con self-join en costeo.php)
   precio_unitario_actual?: number | null
-  // Campos de catálogo presentes también en la fila de receta
-  unit_cost?: number | null
-  unit?: string | null
-  category_label?: string | null
+  // Campos de catálogo
+  costo_unitario?: number | null
+  unidad?: string | null
+  categoria?: string | null
 }
 
 export type CosteoPlatillo = {
