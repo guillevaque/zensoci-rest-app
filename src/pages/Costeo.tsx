@@ -15,7 +15,7 @@ function usd(v: number | null | undefined) {
 
 /** Costo vivo de un ingrediente aplicando merma (usa precio_unitario_actual del catálogo) */
 function liveCosto(ing: CosteoIngrediente): number | null {
-  const precioVivo = ing.precio_unitario_actual ?? ing.unit_cost ?? null
+  const precioVivo = ing.precio_unitario_actual ?? ing.costo_unitario ?? null
   if (precioVivo == null || ing.cantidad == null) return null
   return ing.cantidad * precioVivo * (1 + (ing.porcentaje_merma ?? 0))
 }
@@ -55,7 +55,7 @@ function IngredientesDrawer({ platillo, onClose }: { platillo: CosteoPlatillo; o
   const empaque = platillo.ingredientes?.filter(i => i.tipo_receta === 'empaque') ?? []
 
   const allIngs = platillo.ingredientes ?? []
-  const totalSnapshot = allIngs.reduce((sum, i) => sum + (i.costo_linea_ref ?? 0), 0)
+  const totalSnapshot = allIngs.reduce((sum, i) => sum + (i.costo_linea ?? 0), 0)
   const totalLive = allIngs.reduce<number | null>((sum, i) => {
     const lc = liveCosto(i)
     if (lc == null) return sum  // si alguno no tiene costo vivo, ignora
@@ -84,12 +84,12 @@ function IngredientesDrawer({ platillo, onClose }: { platillo: CosteoPlatillo; o
                 const lc = liveCosto(ing)
                 return (
                   <tr key={ing.id} className="border-b border-gray-50 hover:bg-gray-50">
-                    <td className="py-1.5 pr-2 text-gray-800">{ing.name}</td>
+                    <td className="py-1.5 pr-2 text-gray-800">{ing.nombre}</td>
                     <td className="py-1.5 text-right text-gray-500 whitespace-nowrap text-xs">
                       {ing.cantidad != null ? `${ing.cantidad} ${ing.unidad_medida ?? ''}` : '—'}
                     </td>
                     <td className="py-1.5 text-right font-mono text-gray-500">
-                      {usd(ing.costo_linea_ref)}
+                      {usd(ing.costo_linea)}
                     </td>
                     {hasLive && (
                       <td className={`py-1.5 text-right font-mono font-medium ${lc == null ? 'text-gray-300' : 'text-gray-800'}`}>
@@ -98,7 +98,7 @@ function IngredientesDrawer({ platillo, onClose }: { platillo: CosteoPlatillo; o
                     )}
                     {hasLive && (
                       <td className="py-1.5 text-right">
-                        <DeltaBadge snapshot={ing.costo_linea_ref} live={lc} />
+                        <DeltaBadge snapshot={ing.costo_linea} live={lc} />
                       </td>
                     )}
                   </tr>
@@ -181,7 +181,7 @@ function IngredientesDrawer({ platillo, onClose }: { platillo: CosteoPlatillo; o
                         </p>
                       </div>
                       <div>
-                        <DeltaBadge snapshot={totalSnapshot} live={totalLive} />
+                        <DeltaBadge snapshot={totalSnapshot ?? null} live={totalLive} />
                       </div>
                     </div>
                   </div>
