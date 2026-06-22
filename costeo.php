@@ -1,93 +1,96 @@
 <?php
-// api/costeo.php
-// Endpoint para costeo de platillos Zensoci POS
-// Coloca este archivo en tu carpeta /api/ en Hostinger
+/**
+ * /api/costeo.php — Consultas de costeo de platillos (solo lectura + actualización de precios)
+ * Tablas: costeo_platillos, ingredientes (filas con costeo_platillo_id)
+ */
+require_once __DIR__ . '/headers.php';
+require_once __DIR__ . '/config.php';
 
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, PUT, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
-
-// -- Conexión (usa las mismas credenciales que el resto del backend) --
-require_once __DIR__ . '/config.php'; // $pdo ya disponible
+startSession();
+if (empty($_SESSION['user_id'])) jsonError(401, 'No autenticado');
 
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
 try {
-    // ── GET /costeo.php?id=N  →  platillo + ingredientes ──────────────
+    $pdo = getPDO();
+
+    // ── GET /costeo.php?id=N  →  platillo + ingredientes de receta ──────
     if ($method === 'GET' && $id) {
         $stmt = $pdo->prepare('SELECT * FROM costeo_platillos WHERE id = ?');
         $stmt->execute([$id]);
         $platillo = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$platillo) { http_response_code(404); echo json_encode(['error' => 'No encontrado']); exit; }
+        if (!$platillo) jsonError(404, 'Platillo no encontrado');
 
-        // Líneas de receta + costo vivo:
-        //   principal/secundario → desde ingredientes (catálogo unificado)
-        //   empaque              → desde tabla empaques (separada)
-        $stmt2 = $pdo->prepare(
-            'SELECT r.*,
-                    COALESCE(cat.unit_cost, emp.unit_cost) AS precio_unitario_actual
-               FROM ingredientes r
-               LEFT JOIN ingredientes cat ON cat.name = r.name
-                                         AND cat.costeo_platillo_id IS NULL
-               LEFT JOIN empaques     emp ON emp.name = r.name
-                                         AND r.tipo_receta = \'empaque\'
-              WHERE r.costeo_platillo_id = ?
-              ORDER BY r.tipo_receta, r.id'
-        );
+        // Líneas de receta + costo vivo del catálogo:
+        //   - ingredientes con costeo_platillo_id = $id son las líneas de receta
+        //   - self-join con costeo_platillo_id IS NULL obtiene el precio actual del catálogo
+        //   - empaques se resuelven desde la tabla empaques separada
+        $stmt2 = $pdo->prepare('
+            SELECT r.*,
+                   COALESCE(cat.unit_cost, emp.unit_cost) AS precio_unitario_actual
+              FROM ingredientes r
+              LEFT JOIN ingredientes cat ON cat.name = r.name
+                                        AND cat.costeo_platillo_id IS NULL
+              LEFT JOIN empaques     emp ON emp.name = r.name
+                                        AND r.tipo_receta = \'empaque\'
+             WHERE r.costeo_platillo_id = ?
+             ORDER BY r.tipo_receta, r.id
+        ');
         $stmt2->execute([$id]);
         $platillo['ingredientes'] = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 
-        echo json_encode($platillo);
-        exit;
+        jsonOk($platillo);
     }
 
-    // ── GET /costeo.php  →  lista de platillos ────────────────────────
+    // ── GET /costeo.php  →  lista de platillos activos ──────────────────
     if ($method === 'GET') {
-        $where = ['activo = 1'];
+        $where  = ['activo = 1'];
         $params = [];
 
         if (!empty($_GET['categoria'])) {
-            $where[] = 'categoria = ?';
+            $where[]  = 'categoria = ?';
             $params[] = $_GET['categoria'];
         }
         if (!empty($_GET['q'])) {
-            $where[] = 'nombre LIKE ?';
+            $where[]  = 'nombre LIKE ?';
             $params[] = '%' . $_GET['q'] . '%';
         }
 
-        $sql = 'SELECT * FROM costeo_platillos WHERE ' . implode(' AND ', $where) . ' ORDER BY numero_menu';
+        $sql  = 'SELECT * FROM costeo_platillos WHERE ' . implode(' AND ', $where) . ' ORDER BY numero_menu';
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
-        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
-        exit;
+        jsonOk($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
-    // ── PUT /costeo.php?id=N  →  actualizar precio/margen ────────────
+    // ── PUT /costeo.php?id=N  →  actualizar precio o margen ─────────────
     if ($method === 'PUT' && $id) {
-        $data = json_decode(file_get_contents('php://input'), true) ?? [];
-        $allowed = ['precio_con_iva', 'precio_sin_iva', 'costo_unitario', 'incremento_delivery',
-                    'precio_delivery', 'precio_delivery_sin_iva', 'activo', 'ultima_actualizacion'];
+        $b       = json_decode(file_get_contents('php://input'), true) ?? [];
+        $allowed = [
+            'precio_con_iva', 'precio_sin_iva', 'costo_unitario',
+            'incremento_delivery', 'precio_delivery', 'precio_delivery_sin_iva',
+            'activo', 'ultima_actualizacion',
+        ];
         $sets = [];
         $vals = [];
         foreach ($allowed as $col) {
-            if (array_key_exists($col, $data)) { $sets[] = "$col = ?"; $vals[] = $data[$col]; }
+            if (array_key_exists($col, $b)) {
+                $sets[] = "$col = ?";
+                $vals[] = $b[$col];
+            }
         }
-        if (empty($sets)) { http_response_code(400); echo json_encode(['error' => 'Sin campos válidos']); exit; }
+        if (empty($sets)) jsonError(400, 'Sin campos válidos para actualizar');
+
         $vals[] = $id;
-        $pdo->prepare('UPDATE costeo_platillos SET ' . implode(', ', $sets) . ' WHERE id = ?')->execute($vals);
-        echo json_encode(['ok' => true]);
-        exit;
+        $pdo->prepare('UPDATE costeo_platillos SET ' . implode(', ', $sets) . ' WHERE id = ?')
+            ->execute($vals);
+        jsonOk(['ok' => true]);
     }
 
-    http_response_code(405);
-    echo json_encode(['error' => 'Método no permitido']);
+    jsonError(405, 'Método no permitido');
 
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    error_log('[costeo.php] ' . $e->getMessage());
+    jsonError(500, 'Error interno del servidor');
 }
