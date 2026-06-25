@@ -65,8 +65,14 @@ export function GestionMenu() {
       let imageUrl = form.image_url;
 
       if (imageFile) {
-        const res = await MenuAPI.uploadImage(imageFile);
-        imageUrl = res.url;
+        try {
+          const res = await MenuAPI.uploadImage(imageFile);
+          imageUrl = res.url;
+        } catch (uploadErr: any) {
+          setSaving(false);
+          alert('Error al subir la imagen: ' + (uploadErr?.message || 'sin detalles'));
+          return;
+        }
       }
 
       const payload = { ...form, image_url: imageUrl };
@@ -78,8 +84,8 @@ export function GestionMenu() {
       }
       setModal(m => ({ ...m, open: false }));
       load();
-    } catch {
-      alert('Error al guardar');
+    } catch (err: any) {
+      alert('Error al guardar: ' + (err?.message || 'sin detalles'));
     } finally {
       setSaving(false);
     }
