@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { MdCloudUpload, MdClose } from 'react-icons/md';
 
 export type MenuForm = {
@@ -62,9 +63,9 @@ export default function MenuModal({ open, title, initial, saving = false, onClos
 
   if (!open) return null;
 
-  return (
+  return ReactDOM.createPortal(
     <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}
+      style={{ position: 'fixed', inset: 0, top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
@@ -255,6 +256,7 @@ export default function MenuModal({ open, title, initial, saving = false, onClos
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
