@@ -1,5 +1,5 @@
 // src/api/menu.ts
-import { http } from './http'
+import { http, HTTP_API_BASE } from './http'
 
 export type MenuItem = {
   id: number;
@@ -10,6 +10,10 @@ export type MenuItem = {
   image_url?: string;
   activo?: number; // 1|0
 };
+
+// Deriva el origen del sitio desde la base de la API (ej. "https://app.zensoci.com/api" → "https://app.zensoci.com")
+// En dev con proxy, API_BASE es "/api", así que el origen es "" (mismo origen = localhost:5173)
+const SITE_ORIGIN = HTTP_API_BASE.replace(/\/api\/?$/, '').replace(/^\/api\/?$/, '');
 
 export const MenuAPI = {
   list: (params?: { q?:string; categoria?:string }) => {
@@ -24,9 +28,18 @@ export const MenuAPI = {
     http.send('PUT', `/menu.php?id=${id}`, data) as Promise<{ ok:true }>,
   remove: (id:number) =>
     http.send('DELETE', `/menu.php?id=${id}`) as Promise<{ ok:true }>,
-  uploadImage: (file: File): Promise<{ ok:true; url:string }> => {
+
+  uploadImage: async (file: File): Promise<{ ok: true; url: string }> => {
     const fd = new FormData();
     fd.append('image', file);
-    return http.upload('/upload.php', fd) as Promise<{ ok:true; url:string }>;
+    const res = await http.upload('/upload.php', fd) as { ok: boolean; path?: string; url?: string };
+
+    // El servidor devuelve "path" (relativo) — construimos la URL absoluta
+    const raw = res.path ?? res.url ?? '';
+    const url = raw.startsWith('http')
+      ? raw
+      : SITE_ORIGIN + (raw.startsWith('/') ? raw : '/' + raw);
+
+    return { ok: true, url };
   },
 };
