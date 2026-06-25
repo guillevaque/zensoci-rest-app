@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   FiGrid, FiCoffee, FiFileText, FiBookOpen, FiPackage,
-  FiBarChart2, FiUsers, FiSettings, FiLogOut,
+  FiBarChart2, FiUsers, FiSettings, FiLogOut, FiDollarSign,
 } from 'react-icons/fi';
 import { useAuth } from '../auth/AuthContext';
 
@@ -16,9 +16,10 @@ const NAV = [
   { to: '/inventario', icon: React.createElement(FiPackage,  { size: 18 }), label: 'Inventario' },
 ];
 const ADMIN = [
-  { to: '/reportes', icon: React.createElement(FiBarChart2, { size: 18 }), label: 'Reportes' },
-  { to: '/personal', icon: React.createElement(FiUsers,     { size: 18 }), label: 'Personal' },
-  { to: '/ajustes',  icon: React.createElement(FiSettings,  { size: 18 }), label: 'Configuración' },
+  { to: '/reportes', icon: React.createElement(FiBarChart2,   { size: 18 }), label: 'Reportes' },
+  { to: '/costeo',   icon: React.createElement(FiDollarSign,  { size: 18 }), label: 'Costeo' },
+  { to: '/personal', icon: React.createElement(FiUsers,       { size: 18 }), label: 'Personal' },
+  { to: '/ajustes',  icon: React.createElement(FiSettings,    { size: 18 }), label: 'Configuración' },
 ];
 
 const SECTION: React.CSSProperties = {

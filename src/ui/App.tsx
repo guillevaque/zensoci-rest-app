@@ -13,6 +13,7 @@ import { Inventory }    from '../pages/Inventory'
 import { Reports }      from '../pages/Reports'
 import Personal   from '../pages/Personal'
 import { Settings }     from '../pages/Settings'
+import { Costeo }      from '../pages/Costeo'
 
 export function App() {
   return (
@@ -38,6 +39,7 @@ export function App() {
           <Route path="/reportes"     element={<Reports />} />
           <Route path="/personal"     element={<Personal />} />
           <Route path="/ajustes"      element={<Settings />} />
+          <Route path="/costeo"       element={<Costeo />} />
 
           {/* Legacy redirect */}
           <Route path="/pos"          element={<Navigate to="/pedidos" replace />} />
