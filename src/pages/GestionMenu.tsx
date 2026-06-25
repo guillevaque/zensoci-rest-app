@@ -9,10 +9,11 @@ type MenuItem = {
   categoria: string;
   precio: number;
   descripcion?: string;
+  image_url?: string;
   activo?: number;
 };
 
-const INITIAL_FORM: MenuForm = { nombre: '', categoria: '', precio: 0, descripcion: '', activo: 1 };
+const INITIAL_FORM: MenuForm = { nombre: '', categoria: '', precio: 0, descripcion: '', activo: 1, image_url: undefined };
 
 const STOCK_BADGE: Record<string, { label: string; bg: string; color: string }> = {
   disponible: { label: 'Disponible', bg: '#DCFCE7', color: '#166534' },
@@ -51,15 +52,29 @@ export function GestionMenu() {
 
   const openAdd = () => setModal({ open: true, title: 'Nuevo plato', initial: INITIAL_FORM });
   const openEdit = (item: MenuItem) =>
-    setModal({ open: true, title: 'Editar plato', initial: { nombre: item.nombre, categoria: item.categoria, precio: item.precio, descripcion: item.descripcion, activo: item.activo }, id: item.id });
+    setModal({
+      open: true,
+      title: 'Editar plato',
+      initial: { nombre: item.nombre, categoria: item.categoria, precio: item.precio, descripcion: item.descripcion, activo: item.activo, image_url: item.image_url },
+      id: item.id,
+    });
 
-  const handleSubmit = async (form: MenuForm) => {
+  const handleSubmit = async (form: MenuForm, imageFile?: File) => {
     setSaving(true);
     try {
+      let imageUrl = form.image_url;
+
+      if (imageFile) {
+        const res = await MenuAPI.uploadImage(imageFile);
+        imageUrl = res.url;
+      }
+
+      const payload = { ...form, image_url: imageUrl };
+
       if (modal.id) {
-        await MenuAPI.update(modal.id, form);
+        await MenuAPI.update(modal.id, payload);
       } else {
-        await MenuAPI.create(form);
+        await MenuAPI.create(payload);
       }
       setModal(m => ({ ...m, open: false }));
       load();
@@ -80,10 +95,7 @@ export function GestionMenu() {
     }
   };
 
-  const getStock = (item: MenuItem) => {
-    if (!item.activo) return 'agotado';
-    return 'disponible';
-  };
+  const getStock = (item: MenuItem) => item.activo ? 'disponible' : 'agotado';
 
   return (
     <div className="space-y-5">
@@ -141,12 +153,20 @@ export function GestionMenu() {
                 return (
                   <tr key={item.id}>
                     <td>
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
-                        style={{ background: '#EEF4EC' }}
-                      >
-                        🍽
-                      </div>
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.nombre}
+                          style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 8 }}
+                        />
+                      ) : (
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+                          style={{ background: '#EEF4EC' }}
+                        >
+                          🍽
+                        </div>
+                      )}
                     </td>
                     <td>
                       <div className="font-semibold text-sm" style={{ color: '#1C2B1A' }}>{item.nombre}</div>

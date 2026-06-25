@@ -1,4 +1,5 @@
 import React from 'react';
+import { MdCloudUpload, MdClose } from 'react-icons/md';
 
 export type MenuForm = {
   nombre: string;
@@ -6,6 +7,7 @@ export type MenuForm = {
   precio: number;
   descripcion?: string;
   activo: number;
+  image_url?: string;
 };
 
 type Props = {
@@ -14,12 +16,20 @@ type Props = {
   initial: MenuForm;
   saving?: boolean;
   onClose: () => void;
-  onSubmit: (data: MenuForm) => void;
+  onSubmit: (data: MenuForm, imageFile?: File) => void;
 };
 
 export default function MenuModal({ open, title, initial, saving = false, onClose, onSubmit }: Props) {
   const [form, setForm] = React.useState<MenuForm>(initial);
-  React.useEffect(() => setForm(initial), [initial, open]);
+  const [preview, setPreview] = React.useState<string | null>(null);
+  const [imageFile, setImageFile] = React.useState<File | undefined>(undefined);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    setForm(initial);
+    setPreview(null);
+    setImageFile(undefined);
+  }, [initial, open]);
 
   const handle = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -28,7 +38,27 @@ export default function MenuModal({ open, title, initial, saving = false, onClos
 
   const toggleActivo = () => setForm(f => ({ ...f, activo: f.activo ? 0 : 1 }));
 
-  const submit = (e: React.FormEvent) => { e.preventDefault(); onSubmit(form); };
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+  };
+
+  const removeImage = () => {
+    setImageFile(undefined);
+    setPreview(null);
+    setForm(f => ({ ...f, image_url: undefined }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(form, imageFile);
+  };
+
+  const currentImage = preview || form.image_url || null;
 
   if (!open) return null;
 
@@ -40,7 +70,7 @@ export default function MenuModal({ open, title, initial, saving = false, onClos
       <div
         style={{
           background: '#fff',
-          width: 560,
+          width: 580,
           maxWidth: '100%',
           borderRadius: 20,
           boxShadow: '0 16px 48px rgba(0,0,0,0.20)',
@@ -76,6 +106,88 @@ export default function MenuModal({ open, title, initial, saving = false, onClos
 
         {/* Form */}
         <form onSubmit={submit} style={{ padding: 20, overflow: 'auto' }}>
+
+          {/* Image picker */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#1C2B1A', marginBottom: 6 }}>
+              Imagen del plato
+            </label>
+            <div
+              style={{
+                border: '2px dashed #C8D8C4',
+                borderRadius: 12,
+                background: '#F7FAF6',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: 12,
+                position: 'relative',
+              }}
+            >
+              {currentImage ? (
+                <>
+                  <img
+                    src={currentImage}
+                    alt="Preview"
+                    style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.8rem', color: '#3C6030', fontWeight: 600, marginBottom: 4 }}>
+                      {imageFile ? imageFile.name : 'Imagen actual'}
+                    </div>
+                    {imageFile && (
+                      <div style={{ fontSize: '0.75rem', color: '#6B7A69' }}>
+                        {(imageFile.size / 1024).toFixed(0)} KB
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{ marginTop: 6, fontSize: '0.75rem', color: '#3C6030', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                    >
+                      Cambiar imagen
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    style={{
+                      position: 'absolute', top: 8, right: 8,
+                      background: '#FEE2E2', border: 'none', borderRadius: '50%',
+                      width: 24, height: 24, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#991B1B',
+                    }}
+                    aria-label="Quitar imagen"
+                  >
+                    <MdClose size={14} />
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    gap: 6, padding: '12px 0', background: 'none', border: 'none',
+                    cursor: 'pointer', color: '#6B7A69',
+                  }}
+                >
+                  <MdCloudUpload size={28} style={{ color: '#3C6030' }} />
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 500 }}>Seleccionar imagen</span>
+                  <span style={{ fontSize: '0.75rem' }}>JPG, PNG, WebP — máx. 5 MB</span>
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleImageChange}
+                style={{ display: 'none' }}
+              />
+            </div>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#1C2B1A', marginBottom: 6 }}>

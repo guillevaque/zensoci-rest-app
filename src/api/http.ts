@@ -21,4 +21,10 @@ export const http = {
       headers: body ? { 'Content-Type': 'application/json' } : undefined,
       body: body ? JSON.stringify(body) : undefined,
     }).then(jsonOrThrow),
+  upload: (p: string, formData: FormData) =>
+    fetch(`${API_BASE}${p}`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    }).then(jsonOrThrow),
 };

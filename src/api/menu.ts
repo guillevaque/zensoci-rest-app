@@ -7,6 +7,7 @@ export type MenuItem = {
   categoria: string;
   precio: number;
   descripcion?: string;
+  image_url?: string;
   activo?: number; // 1|0
 };
 
@@ -23,4 +24,9 @@ export const MenuAPI = {
     http.send('PUT', `/menu.php?id=${id}`, data) as Promise<{ ok:true }>,
   remove: (id:number) =>
     http.send('DELETE', `/menu.php?id=${id}`) as Promise<{ ok:true }>,
+  uploadImage: (file: File): Promise<{ ok:true; url:string }> => {
+    const fd = new FormData();
+    fd.append('image', file);
+    return http.upload('/upload.php', fd) as Promise<{ ok:true; url:string }>;
+  },
 };
