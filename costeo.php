@@ -29,11 +29,11 @@ try {
         //   - empaques se resuelven desde la tabla empaques separada
         $stmt2 = $pdo->prepare('
             SELECT r.*,
-                   COALESCE(cat.costo_unitario, emp.unit_cost) AS precio_unitario_actual
+                   COALESCE(cat.costo_unitario, emp.costo_unitario) AS precio_unitario_actual
               FROM ingredientes r
               LEFT JOIN ingredientes cat ON cat.nombre = r.nombre
                                         AND cat.costeo_platillo_id IS NULL
-              LEFT JOIN empaques     emp ON emp.name = r.nombre
+              LEFT JOIN empaques     emp ON emp.nombre = r.nombre
                                         AND r.tipo_receta = \'empaque\'
              WHERE r.costeo_platillo_id = ?
              ORDER BY r.tipo_receta, r.id
