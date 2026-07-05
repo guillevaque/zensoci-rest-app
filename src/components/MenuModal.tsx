@@ -106,7 +106,7 @@ export default function MenuModal({ open, title, initial, saving = false, onClos
         </div>
 
         {/* Form */}
-        <form onSubmit={submit} style={{ padding: 20, overflow: 'auto' }}>
+        <form onSubmit={submit} style={{ padding: 20 }}>
 
           {/* Image picker */}
           <div style={{ marginBottom: 16 }}>
@@ -128,7 +128,7 @@ export default function MenuModal({ open, title, initial, saving = false, onClos
                   <img
                     src={currentImage}
                     alt="Preview"
-                    style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block', borderRadius: 10 }}
+                    style={{ width: '100%', maxHeight: 160, objectFit: 'contain', display: 'block', borderRadius: 10, background: '#F0F4EF' }}
                   />
                   <div style={{ position: 'absolute', bottom: 8, right: 8, display: 'flex', gap: 6 }}>
                     <button
