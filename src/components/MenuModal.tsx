@@ -118,11 +118,9 @@ export default function MenuModal({ open, title, initial, saving = false, onClos
                 border: '2px dashed #C8D8C4',
                 borderRadius: 12,
                 background: '#F7FAF6',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: 12,
                 position: 'relative',
+                overflow: 'hidden',
+                minHeight: currentImage ? 0 : 100,
               }}
             >
               {currentImage ? (
@@ -130,51 +128,42 @@ export default function MenuModal({ open, title, initial, saving = false, onClos
                   <img
                     src={currentImage}
                     alt="Preview"
-                    style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }}
+                    style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block', borderRadius: 10 }}
                   />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.8rem', color: '#3C6030', fontWeight: 600, marginBottom: 4 }}>
-                      {imageFile ? imageFile.name : 'Imagen actual'}
-                    </div>
-                    {imageFile && (
-                      <div style={{ fontSize: '0.75rem', color: '#6B7A69' }}>
-                        {(imageFile.size / 1024).toFixed(0)} KB
-                      </div>
-                    )}
+                  <div style={{ position: 'absolute', bottom: 8, right: 8, display: 'flex', gap: 6 }}>
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      style={{ marginTop: 6, fontSize: '0.75rem', color: '#3C6030', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                      style={{ fontSize: '0.75rem', color: '#fff', background: 'rgba(0,0,0,0.55)', border: 'none', borderRadius: 6, cursor: 'pointer', padding: '4px 12px' }}
                     >
-                      Cambiar imagen
+                      Cambiar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      style={{
+                        background: '#FEE2E2', border: 'none', borderRadius: '50%',
+                        width: 26, height: 26, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#991B1B',
+                      }}
+                      aria-label="Quitar imagen"
+                    >
+                      <MdClose size={14} />
                     </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={removeImage}
-                    style={{
-                      position: 'absolute', top: 8, right: 8,
-                      background: '#FEE2E2', border: 'none', borderRadius: '50%',
-                      width: 24, height: 24, cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: '#991B1B',
-                    }}
-                    aria-label="Quitar imagen"
-                  >
-                    <MdClose size={14} />
-                  </button>
                 </>
               ) : (
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   style={{
-                    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-                    gap: 6, padding: '12px 0', background: 'none', border: 'none',
+                    width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    gap: 6, padding: '20px 0', background: 'none', border: 'none',
                     cursor: 'pointer', color: '#6B7A69',
                   }}
                 >
-                  <MdCloudUpload size={28} style={{ color: '#3C6030' }} />
+                  <MdCloudUpload size={32} style={{ color: '#3C6030' }} />
                   <span style={{ fontSize: '0.8125rem', fontWeight: 500 }}>Seleccionar imagen</span>
                   <span style={{ fontSize: '0.75rem' }}>JPG, PNG, WebP — máx. 5 MB</span>
                 </button>
