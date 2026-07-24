@@ -5,6 +5,7 @@ import {
   FiBarChart2, FiUsers, FiSettings, FiLogOut, FiDollarSign,
 } from 'react-icons/fi';
 import { useAuth } from '../auth/AuthContext';
+import { canAccess, ROLE_LABELS, type AppRole } from '../config/roles';
 
 type SidebarProps = { onNavigate?: () => void };
 
@@ -16,10 +17,10 @@ const NAV = [
   { to: '/inventario', icon: React.createElement(FiPackage,  { size: 18 }), label: 'Inventario' },
 ];
 const ADMIN = [
-  { to: '/reportes', icon: React.createElement(FiBarChart2,   { size: 18 }), label: 'Reportes' },
-  { to: '/costeo',   icon: React.createElement(FiDollarSign,  { size: 18 }), label: 'Costeo' },
-  { to: '/personal', icon: React.createElement(FiUsers,       { size: 18 }), label: 'Personal' },
-  { to: '/ajustes',  icon: React.createElement(FiSettings,    { size: 18 }), label: 'Configuración' },
+  { to: '/reportes', icon: React.createElement(FiBarChart2,  { size: 18 }), label: 'Reportes' },
+  { to: '/costeo',   icon: React.createElement(FiDollarSign, { size: 18 }), label: 'Costeo' },
+  { to: '/personal', icon: React.createElement(FiUsers,      { size: 18 }), label: 'Personal' },
+  { to: '/ajustes',  icon: React.createElement(FiSettings,   { size: 18 }), label: 'Configuración' },
 ];
 
 const SECTION: React.CSSProperties = {
@@ -58,7 +59,11 @@ function NavItem({ item, onNavigate }: { item: (typeof NAV)[0] & { badge?: numbe
 
 export default function Sidebar({ onNavigate }: SidebarProps) {
   const { user, logout } = useAuth();
+  const role = user?.role as string | undefined;
   const avatarColor = COLORS[(Number((user as any)?.id ?? 0)) % COLORS.length];
+
+  const visibleNav   = NAV.filter(i => canAccess(role, i.to));
+  const visibleAdmin = ADMIN.filter(i => canAccess(role, i.to));
 
   return (
     <aside className="hidden md:flex flex-col fixed left-0 top-0 z-40 h-full"
@@ -70,9 +75,14 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
 
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
         <div style={SECTION}>Operación</div>
-        {NAV.map(i => <NavItem key={i.to} item={i} onNavigate={onNavigate} />)}
-        <div style={SECTION}>Administración</div>
-        {ADMIN.map(i => <NavItem key={i.to} item={i} onNavigate={onNavigate} />)}
+        {visibleNav.map(i => <NavItem key={i.to} item={i} onNavigate={onNavigate} />)}
+
+        {visibleAdmin.length > 0 && (
+          <>
+            <div style={SECTION}>Administración</div>
+            {visibleAdmin.map(i => <NavItem key={i.to} item={i} onNavigate={onNavigate} />)}
+          </>
+        )}
       </nav>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(0,0,0,0.15)', borderRadius: 14 }}>
@@ -84,7 +94,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
             {user?.name ?? 'Usuario'}
           </div>
           <div style={{ fontFamily: 'var(--zs-font-mono)', fontSize: 11, opacity: 0.7, color: 'var(--zs-paper)', textTransform: 'capitalize' }}>
-            {user?.role ?? ''}
+            {ROLE_LABELS[role as AppRole] ?? role ?? ''}
           </div>
         </div>
         <button onClick={logout}

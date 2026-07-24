@@ -15,6 +15,9 @@ import Personal   from '../pages/Personal'
 import { Settings }     from '../pages/Settings'
 import { Costeo }      from '../pages/Costeo'
 
+const MANAGER            = ['manager']             as const;
+const MANAGER_CONTADOR   = ['manager', 'contador'] as const;
+
 export function App() {
   return (
     <AuthProvider>
@@ -22,7 +25,7 @@ export function App() {
         {/* Public */}
         <Route path="/login" element={<Login />} />
 
-        {/* Protected — all require auth */}
+        {/* Protected — requires authentication */}
         <Route
           element={
             <ProtectedRoute>
@@ -31,15 +34,21 @@ export function App() {
           }
         >
           <Route index                element={<Navigate to="/dashboard" replace />} />
+
+          {/* Accessible to all authenticated roles */}
           <Route path="/dashboard"   element={<Dashboard />} />
           <Route path="/mesas"        element={<GestionMesas />} />
           <Route path="/pedidos"      element={<Pedidos />} />
           <Route path="/menu"         element={<GestionMenu />} />
-          <Route path="/inventario"   element={<Inventory />} />
-          <Route path="/reportes"     element={<Reports />} />
-          <Route path="/personal"     element={<Personal />} />
-          <Route path="/ajustes"      element={<Settings />} />
-          <Route path="/costeo"       element={<Costeo />} />
+
+          {/* Manager + Contador */}
+          <Route path="/inventario"   element={<ProtectedRoute roles={MANAGER_CONTADOR}><Inventory /></ProtectedRoute>} />
+          <Route path="/reportes"     element={<ProtectedRoute roles={MANAGER_CONTADOR}><Reports /></ProtectedRoute>} />
+          <Route path="/costeo"       element={<ProtectedRoute roles={MANAGER_CONTADOR}><Costeo /></ProtectedRoute>} />
+
+          {/* Manager only */}
+          <Route path="/personal"     element={<ProtectedRoute roles={MANAGER}><Personal /></ProtectedRoute>} />
+          <Route path="/ajustes"      element={<ProtectedRoute roles={MANAGER}><Settings /></ProtectedRoute>} />
 
           {/* Legacy redirect */}
           <Route path="/pos"          element={<Navigate to="/pedidos" replace />} />

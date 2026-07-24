@@ -1,16 +1,9 @@
 <?php
-// api/empaques.php
-// CRUD del catálogo de empaques de Zensoci POS.
-// Coloca este archivo en tu carpeta /api/ en Hostinger.
+require_once __DIR__ . '/headers.php';
+require_once __DIR__ . '/config.php';
 
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
-
-require_once __DIR__ . '/config.php'; // $pdo
+startSession();
+if (empty($_SESSION['user_id'])) jsonError(401, 'No autenticado');
 
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
@@ -19,6 +12,8 @@ $FIELDS = ['name','category_label','brand','supplier','presentation','unit',
            'units_per_pack','purchase_price_no_iva','unit_cost','stock_qty','min_stock','activo'];
 
 try {
+    $pdo = getPDO();
+
     if ($method === 'GET') {
         $where  = ['activo = 1'];
         $params = [];
@@ -26,11 +21,9 @@ try {
         if (($_GET['filter'] ?? '') === 'bajo')     { $where[] = 'stock_qty > 0 AND stock_qty <= min_stock'; }
         if (($_GET['filter'] ?? '') === 'agotados') { $where[] = 'stock_qty <= 0'; }
 
-        $sql  = 'SELECT * FROM empaques WHERE ' . implode(' AND ', $where) . ' ORDER BY name';
-        $stmt = $pdo->prepare($sql);
+        $stmt = $pdo->prepare('SELECT * FROM empaques WHERE ' . implode(' AND ', $where) . ' ORDER BY name');
         $stmt->execute($params);
-        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
-        exit;
+        jsonOk($stmt->fetchAll());
     }
 
     if ($method === 'POST') {
@@ -39,11 +32,10 @@ try {
         foreach ($FIELDS as $f) {
             if (array_key_exists($f, $data)) { $cols[] = "`$f`"; $ph[] = '?'; $vals[] = $data[$f]; }
         }
-        if (empty($cols)) { http_response_code(400); echo json_encode(['error' => 'Sin datos']); exit; }
+        if (empty($cols)) jsonError(400, 'Sin datos');
         $pdo->prepare('INSERT INTO empaques (' . implode(',', $cols) . ') VALUES (' . implode(',', $ph) . ')')
             ->execute($vals);
-        echo json_encode(['ok' => true, 'id' => (int)$pdo->lastInsertId()]);
-        exit;
+        jsonOk(['ok' => true, 'id' => (int)$pdo->lastInsertId()]);
     }
 
     if ($method === 'PUT' && $id) {
@@ -52,23 +44,20 @@ try {
         foreach ($FIELDS as $f) {
             if (array_key_exists($f, $data)) { $sets[] = "`$f` = ?"; $vals[] = $data[$f]; }
         }
-        if (empty($sets)) { http_response_code(400); echo json_encode(['error' => 'Sin campos']); exit; }
+        if (empty($sets)) jsonError(400, 'Sin campos');
         $vals[] = $id;
         $pdo->prepare('UPDATE empaques SET ' . implode(', ', $sets) . ' WHERE id = ?')->execute($vals);
-        echo json_encode(['ok' => true]);
-        exit;
+        jsonOk(['ok' => true]);
     }
 
     if ($method === 'DELETE' && $id) {
         $pdo->prepare('UPDATE empaques SET activo = 0 WHERE id = ?')->execute([$id]);
-        echo json_encode(['ok' => true]);
-        exit;
+        jsonOk(['ok' => true]);
     }
 
-    http_response_code(405);
-    echo json_encode(['error' => 'Método no permitido']);
+    jsonError(405, 'Método no permitido');
 
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    error_log('[empaques.php] ' . $e->getMessage());
+    jsonError(500, 'Error interno del servidor');
 }
