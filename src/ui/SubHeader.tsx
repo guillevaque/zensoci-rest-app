@@ -14,6 +14,34 @@ const TITLES: Record<string, string> = {
   '/costeo':     'Costeo',
   '/personal':   'Personal',
   '/ajustes':    'Configuración',
+  // Facturación — Clientes
+  '/facturacion/clientes/facturas':                'Facturas',
+  '/facturacion/clientes/facturas-rectificativas': 'Facturas Rectificativas',
+  '/facturacion/clientes/contingencias':           'Contingencias',
+  '/facturacion/clientes/pagos':                   'Pagos',
+  '/facturacion/clientes/productos':               'Productos',
+  '/facturacion/clientes/clientes':                'Clientes',
+  // Facturación — Proveedores
+  '/facturacion/proveedores/facturas':                'Facturas — Proveedores',
+  '/facturacion/proveedores/facturas-rectificativas': 'Facturas Rectificativas — Proveedores',
+  '/facturacion/proveedores/cargar-compras':          'Cargar Compras con IA',
+  '/facturacion/proveedores/pagos':                   'Pagos — Proveedores',
+  '/facturacion/proveedores/cuentas-bancarias':       'Cuentas Bancarias',
+  '/facturacion/proveedores/productos':               'Productos — Proveedores',
+  '/facturacion/proveedores/proveedores':             'Proveedores',
+  // Facturación — Informes
+  '/facturacion/informes/analisis-facturas':       'Análisis de Facturas',
+  '/facturacion/informes/invalidacion':            'Invalidación',
+  '/facturacion/informes/anexo-1':                 'Anexo 1: Ventas Contribuyentes',
+  '/facturacion/informes/anexo-2':                 'Anexo 2: Ventas Consumidor',
+  '/facturacion/informes/anexo-3':                 'Anexo 3: Compras',
+  '/facturacion/informes/anexo-5':                 'Anexo 5: Sujetos Excluidos',
+  '/facturacion/informes/anexo-8':                 'Anexo 8: Percepción IVA 1%',
+  '/facturacion/informes/anexo-11':                'Anexo 11: Anticipo IVA 2%',
+  '/facturacion/informes/anexo-13':                'Anexo 13: Documentos Anulados',
+  '/facturacion/informes/libro-contribuyentes':    'Libro de Contribuyentes',
+  '/facturacion/informes/libro-consumidor':        'Libro de Consumidor',
+  '/facturacion/informes/libro-compras':           'Libro de Compras',
 };
 
 export default function SubHeader({ onToggleMobile }: Props) {
@@ -33,7 +61,7 @@ export default function SubHeader({ onToggleMobile }: Props) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <button
-          className="lg:hidden flex"
+          className="md:hidden flex"
           style={{ background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--zs-green)', padding: 4 }}
           onClick={onToggleMobile}
           aria-label="Abrir menú"

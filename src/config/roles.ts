@@ -39,6 +39,10 @@ export const ROUTE_ROLES: Record<string, AppRole[]> = {
   '/costeo':     ['admin', 'manager', 'gerente', 'contador'],
   '/personal':   ['admin', 'manager', 'gerente'],
   '/ajustes':    ['admin', 'manager'],
+  // Facturación / Contabilidad — acceso por grupo padre
+  '/facturacion/clientes':    ['admin', 'manager', 'gerente', 'contador'],
+  '/facturacion/proveedores': ['admin', 'manager', 'gerente', 'contador'],
+  '/facturacion/informes':    ['admin', 'manager', 'gerente', 'contador'],
 };
 
 export function canAccess(role: string | undefined, route: string): boolean {

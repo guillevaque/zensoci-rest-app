@@ -12,9 +12,9 @@ export default function Layout() {
       <Sidebar onNavigate={() => setMobileOpen(false)} />
       <MobileDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} />
 
-      <div className="flex flex-col flex-1 min-w-0 lg:ml-[220px]">
+      <div className="flex flex-col flex-1 min-w-0 md:ml-[220px]">
         <SubHeader onToggleMobile={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-[22px]">
+        <main className="flex-1 overflow-y-auto p-4 md:p-[22px]">
           <Outlet />
         </main>
       </div>
