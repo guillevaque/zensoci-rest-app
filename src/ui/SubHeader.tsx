@@ -11,6 +11,7 @@ const TITLES: Record<string, string> = {
   '/menu':       'Menú',
   '/inventario': 'Inventario',
   '/reportes':   'Reportes',
+  '/costeo':     'Costeo',
   '/personal':   'Personal',
   '/ajustes':    'Configuración',
 };
@@ -32,8 +33,8 @@ export default function SubHeader({ onToggleMobile }: Props) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <button
-          className="md:hidden"
-          style={{ background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--zs-green)', display: 'flex', padding: 4 }}
+          className="lg:hidden flex"
+          style={{ background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--zs-green)', padding: 4 }}
           onClick={onToggleMobile}
           aria-label="Abrir menú"
         >
@@ -46,7 +47,7 @@ export default function SubHeader({ onToggleMobile }: Props) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {/* Barra de búsqueda – oculta en móvil */}
-        <div className="hidden md:inline-flex" style={{
+        <div className="hidden lg:inline-flex" style={{
           alignItems: 'center', gap: 8,
           background: '#fff', border: '1px solid var(--zs-line)', borderRadius: 999,
           padding: '7px 14px', minWidth: 200,
@@ -66,7 +67,7 @@ export default function SubHeader({ onToggleMobile }: Props) {
 
         {/* Imprimir – oculto en móvil */}
         <button
-          className="hidden md:flex"
+          className="hidden lg:flex"
           style={{ width: 36, height: 36, borderRadius: 999, background: '#fff', border: '1px solid var(--zs-line)', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
           aria-label="Imprimir"
           onClick={() => window.print()}

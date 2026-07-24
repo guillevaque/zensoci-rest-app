@@ -61,7 +61,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   const avatarColor = COLORS[(Number((user as any)?.id ?? 0)) % COLORS.length];
 
   return (
-    <aside className="hidden md:flex flex-col fixed left-0 top-0 z-40 h-full"
+    <aside className="hidden lg:flex flex-col fixed left-0 top-0 z-40 h-full"
       style={{ width: 220, background: 'var(--zs-green)', padding: '18px 14px' }}>
 
       <div style={{ padding: '4px 8px 14px' }}>
