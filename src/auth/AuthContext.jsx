@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
   const [allowedRoutes, setAllowedRoutes] = useState([]);
   const [loading, setLoading]         = useState(true);
 
+  /** Carga permisos desde la API y actualiza allowedRoutes (usado por refreshPermissions) */
   const loadPermissions = useCallback(async (role) => {
     if (!role) { setAllowedRoutes([]); return; }
     try {
@@ -29,29 +30,32 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // On mount: verify existing session
+  // Al montar: me.php y permissions.php en PARALELO → 1 round-trip de latencia
   useEffect(() => {
-    AuthService.me()
-      .then(async ({ user: u }) => {
-        setUser(u ?? null);
-        if (u) await loadPermissions(u.role);
-      })
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
-  }, [loadPermissions]);
+    Promise.all([
+      AuthService.me().catch(() => ({ user: null })),
+      http.get('/auth/permissions.php').catch(() => null),
+    ]).then(([{ user: u }, permsData]) => {
+      setUser(u ?? null);
+      if (u) setAllowedRoutes(permsData?.routes ?? staticRoutesForRole(u.role));
+    }).finally(() => setLoading(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loginPin = useCallback(async (userId, pin) => {
     const { user: u } = await AuthService.loginPin(userId, pin);
     setUser(u);
-    await loadPermissions(u.role);
+    // Menú aparece inmediatamente con valores estáticos; servidor sincroniza en background
+    setAllowedRoutes(staticRoutesForRole(u.role));
     navigate('/dashboard', { replace: true });
+    loadPermissions(u.role); // sin await — no bloquea la navegación
   }, [navigate, loadPermissions]);
 
   const loginEmail = useCallback(async (email, password) => {
     const { user: u } = await AuthService.loginEmail(email, password);
     setUser(u);
-    await loadPermissions(u.role);
+    setAllowedRoutes(staticRoutesForRole(u.role));
     navigate('/dashboard', { replace: true });
+    loadPermissions(u.role);
   }, [navigate, loadPermissions]);
 
   const logout = useCallback(async () => {
@@ -61,7 +65,7 @@ export function AuthProvider({ children }) {
     navigate('/login', { replace: true });
   }, [navigate]);
 
-  /** Recarga permisos desde la API (útil tras editar permisos en el panel admin) */
+  /** Recarga permisos desde el servidor (llamar tras editar permisos en el panel admin) */
   const refreshPermissions = useCallback(() => {
     if (user?.role) loadPermissions(user.role);
   }, [user, loadPermissions]);
