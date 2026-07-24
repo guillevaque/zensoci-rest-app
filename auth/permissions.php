@@ -31,11 +31,17 @@ if ($method === 'GET') {
         jsonOk($map);
     }
 
-    // Devuelve solo las rutas permitidas para el rol actual
-    $stmt = $pdo->prepare("SELECT route FROM role_permissions WHERE role = ? AND allowed = 1");
+    // Devuelve rutas permitidas + rutas que el servidor conoce (para merge en cliente)
+    $stmt = $pdo->prepare("SELECT route, allowed FROM role_permissions WHERE role = ?");
     $stmt->execute([$myRole]);
-    $routes = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    jsonOk(['role' => $myRole, 'routes' => $routes]);
+    $rows   = $stmt->fetchAll();
+    $routes = [];
+    $known  = [];
+    foreach ($rows as $r) {
+        $known[] = $r['route'];
+        if ($r['allowed']) $routes[] = $r['route'];
+    }
+    jsonOk(['role' => $myRole, 'routes' => $routes, 'known' => $known]);
 }
 
 if ($method === 'PUT') {
@@ -48,7 +54,8 @@ if ($method === 'PUT') {
 
     $validRoles  = ['admin', 'manager', 'gerente', 'mesero', 'cocina', 'caja', 'contador', 'staff'];
     $validRoutes = ['/dashboard','/mesas','/pedidos','/menu','/inventario',
-                    '/reportes','/costeo','/personal','/ajustes'];
+                    '/reportes','/costeo','/personal','/ajustes',
+                    '/facturacion/clientes','/facturacion/proveedores','/facturacion/informes'];
 
     if (!in_array($role, $validRoles, true))   jsonError(400, 'Rol inválido');
     if (!in_array($route, $validRoutes, true)) jsonError(400, 'Ruta inválida');

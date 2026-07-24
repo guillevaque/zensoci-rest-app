@@ -22,11 +22,20 @@ export function AuthProvider({ children }) {
   /** Carga permisos desde la API y actualiza allowedRoutes (usado por refreshPermissions) */
   const loadPermissions = useCallback(async (role) => {
     if (!role) { setAllowedRoutes([]); return; }
+    const fallback = staticRoutesForRole(role);
     try {
       const data = await http.get('/auth/permissions.php');
-      setAllowedRoutes(data.routes ?? staticRoutesForRole(role));
+      // Merge: servidor decide para rutas que conoce (están en BD);
+      // para rutas nuevas (no en BD aún) usa el fallback estático.
+      const serverAllowed = new Set(data.routes ?? []);
+      const serverKnows   = new Set(data.known  ?? data.routes ?? []);
+      const merged = [
+        ...serverAllowed,
+        ...fallback.filter(r => !serverKnows.has(r)),
+      ];
+      setAllowedRoutes([...new Set(merged)]);
     } catch {
-      setAllowedRoutes(staticRoutesForRole(role));
+      setAllowedRoutes(fallback);
     }
   }, []);
 
@@ -37,7 +46,17 @@ export function AuthProvider({ children }) {
       http.get('/auth/permissions.php').catch(() => null),
     ]).then(([{ user: u }, permsData]) => {
       setUser(u ?? null);
-      if (u) setAllowedRoutes(permsData?.routes ?? staticRoutesForRole(u.role));
+      if (u) {
+        const fallback = staticRoutesForRole(u.role);
+        if (permsData?.routes) {
+          const serverAllowed = new Set(permsData.routes);
+          const serverKnows   = new Set(permsData.known ?? permsData.routes);
+          const merged = [...serverAllowed, ...fallback.filter(r => !serverKnows.has(r))];
+          setAllowedRoutes([...new Set(merged)]);
+        } else {
+          setAllowedRoutes(fallback);
+        }
+      }
     }).finally(() => setLoading(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
