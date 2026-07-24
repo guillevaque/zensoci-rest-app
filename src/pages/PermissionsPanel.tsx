@@ -17,15 +17,26 @@ const ROUTES: { route: string; label: string; icon: string }[] = [
 ];
 
 const ALL_ROLES: { role: AppRole; editable: boolean }[] = [
+  { role: 'admin',    editable: false },
   { role: 'manager',  editable: false },
-  { role: 'staff',    editable: true  },
+  { role: 'gerente',  editable: true  },
+  { role: 'mesero',   editable: true  },
+  { role: 'cocina',   editable: true  },
+  { role: 'caja',     editable: true  },
   { role: 'contador', editable: true  },
+  { role: 'staff',    editable: true  },
 ];
 
-const ROLE_COLORS: Record<AppRole, { bg: string; text: string; badge: string }> = {
-  manager:  { bg: '#3C6030', text: '#fff',     badge: '#5B8C3A' },
-  staff:    { bg: '#1A3A5C', text: '#fff',     badge: '#2E6DA4' },
-  contador: { bg: '#7B4F00', text: '#fff',     badge: '#B07300' },
+// Usa los tokens de marca de index.css
+const ROLE_COLORS: Record<AppRole, { bg: string; text: string }> = {
+  admin:    { bg: 'var(--zs-green-deep)',   text: '#fff' },
+  manager:  { bg: 'var(--zs-green)',        text: '#fff' },
+  gerente:  { bg: 'var(--zs-acc)',          text: '#fff' },
+  mesero:   { bg: 'var(--zs-accent2)',      text: '#fff' },
+  cocina:   { bg: 'var(--zs-accent2-deep)', text: '#fff' },
+  caja:     { bg: 'var(--zs-red)',          text: '#fff' },
+  contador: { bg: 'var(--zs-ink-soft)',     text: '#fff' },
+  staff:    { bg: 'var(--zs-mute)',         text: '#fff' },
 };
 
 function Toggle({ allowed, saving, onToggle }: { allowed: boolean; saving: boolean; onToggle: () => void }) {
@@ -36,7 +47,7 @@ function Toggle({ allowed, saving, onToggle }: { allowed: boolean; saving: boole
       aria-label={allowed ? 'Quitar acceso' : 'Dar acceso'}
       style={{
         width: 44, height: 24, borderRadius: 12, flexShrink: 0,
-        background: allowed ? 'var(--zs-green)' : '#C8CEC8',
+        background: allowed ? 'var(--zs-green)' : 'var(--zs-line-strong)',
         border: 'none', cursor: saving ? 'wait' : 'pointer',
         position: 'relative', transition: 'background 0.2s',
         opacity: saving ? 0.6 : 1,
@@ -71,15 +82,23 @@ function RoleDetail({
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <button
           onClick={onBack}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--zs-green)', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--zs-font-mono)', fontSize: 13, fontWeight: 700, padding: '6px 10px 6px 6px', borderRadius: 8, transition: 'background 0.15s' }}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--zs-green)', display: 'flex', alignItems: 'center', gap: 4,
+            fontFamily: 'var(--zs-font-mono)', fontSize: 13, fontWeight: 700,
+            padding: '6px 10px 6px 6px', borderRadius: 8, transition: 'background 0.15s',
+          }}
           className="hover:bg-black/[0.05]"
         >
           <FiArrowLeft size={16} /> Roles
         </button>
         <span style={{ color: 'var(--zs-mute)', fontSize: 13 }}>/</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: colors.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: colors.text, fontSize: 13, fontWeight: 700 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 8, background: colors.bg,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{ color: colors.text, fontFamily: 'var(--zs-font-mono)', fontSize: 13, fontWeight: 700 }}>
               {ROLE_LABELS[role][0]}
             </span>
           </div>
@@ -87,7 +106,12 @@ function RoleDetail({
             {ROLE_LABELS[role]}
           </span>
           {!editable && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#F0F4F0', borderRadius: 6, padding: '2px 8px', fontFamily: 'var(--zs-font-mono)', fontSize: 11, color: 'var(--zs-mute)' }}>
+            <span style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              background: 'var(--zs-paper)', borderRadius: 6, padding: '2px 8px',
+              fontFamily: 'var(--zs-font-mono)', fontSize: 11, color: 'var(--zs-mute)',
+              border: '1px solid var(--zs-line)',
+            }}>
               <FiLock size={10} /> Solo lectura
             </span>
           )}
@@ -110,27 +134,31 @@ function RoleDetail({
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '13px 16px', borderRadius: 10,
-                background: idx % 2 === 0 ? '#F7FAF7' : '#fff',
-                border: '1px solid #EDF1ED',
+                background: idx % 2 === 0 ? 'var(--zs-cream)' : '#fff',
+                border: '1px solid var(--zs-line)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{
-                  width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: isAllowed ? `${colors.bg}18` : '#F0F0F0',
-                  color: isAllowed ? colors.bg : '#AAA',
+                  width: 32, height: 32, borderRadius: 8,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: isAllowed ? 'var(--zs-paper)' : 'var(--zs-line)',
+                  color: isAllowed ? colors.bg : 'var(--zs-mute)',
                   fontFamily: 'var(--zs-font-mono)', fontSize: 13, fontWeight: 700,
                   transition: 'background 0.2s, color 0.2s',
                 }}>
                   {r.icon}
                 </div>
-                <span style={{ fontFamily: 'var(--zs-font-mono)', fontWeight: 600, fontSize: 14, color: isAllowed ? 'var(--zs-ink)' : 'var(--zs-mute)' }}>
+                <span style={{
+                  fontFamily: 'var(--zs-font-mono)', fontWeight: 600, fontSize: 14,
+                  color: isAllowed ? 'var(--zs-ink)' : 'var(--zs-mute)',
+                }}>
                   {r.label}
                 </span>
               </div>
               {editable
                 ? <Toggle allowed={isAllowed} saving={isSaving} onToggle={() => onToggle(r.route, isAllowed)} />
-                : <FiLock size={14} color="#C8CEC8" />
+                : <FiLock size={14} color="var(--zs-line-strong)" />
               }
             </div>
           );
@@ -161,7 +189,11 @@ export default function PermissionsPanel() {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-        <div style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid #3C6030', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
+        <div style={{
+          width: 28, height: 28, borderRadius: '50%',
+          border: '3px solid var(--zs-green)', borderTopColor: 'transparent',
+          animation: 'spin 0.7s linear infinite',
+        }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -169,8 +201,8 @@ export default function PermissionsPanel() {
 
   if (error) {
     return (
-      <div style={{ padding: 20, borderRadius: 10, background: '#FEF2F2', border: '1px solid #FECACA' }}>
-        <p style={{ color: '#C0392B', fontFamily: 'var(--zs-font-mono)', fontSize: 13, margin: 0 }}>{error}</p>
+      <div style={{ padding: 20, borderRadius: 10, background: 'var(--zs-paper)', border: '1px solid var(--zs-line)' }}>
+        <p style={{ color: 'var(--zs-red)', fontFamily: 'var(--zs-font-mono)', fontSize: 13, margin: 0 }}>{error}</p>
       </div>
     );
   }
@@ -193,14 +225,14 @@ export default function PermissionsPanel() {
   // Vista de tarjetas
   return (
     <div>
-      <h2 style={{ fontFamily: 'var(--zs-font-display)', fontSize: 18, fontWeight: 700, color: 'var(--zs-ink)', marginBottom: 4 }}>
+      <h2 style={{ fontFamily: 'var(--zs-font-display)', fontSize: 20, fontWeight: 400, color: 'var(--zs-green)', marginBottom: 4 }}>
         Permisos por Rol
       </h2>
       <p style={{ fontFamily: 'var(--zs-font-mono)', fontSize: 12, color: 'var(--zs-mute)', marginBottom: 20 }}>
         Selecciona un rol para ver y editar sus permisos de acceso.
       </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {ALL_ROLES.map(({ role, editable }) => {
           const colors = ROLE_COLORS[role];
           const rolePerms = permissions[role] ?? {};
@@ -213,38 +245,52 @@ export default function PermissionsPanel() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 14,
                 padding: '14px 16px', borderRadius: 12,
-                background: '#fff', border: '1px solid #E8EDE8',
+                background: '#fff', border: '1px solid var(--zs-line)',
                 cursor: 'pointer', textAlign: 'left', width: '100%',
                 transition: 'border-color 0.15s, box-shadow 0.15s',
+                boxShadow: 'var(--zs-shadow-1)',
               }}
-              className="hover:border-[#3C6030]/40 hover:shadow-sm"
+              className="hover:border-[var(--zs-green)]/40 hover:shadow-sm"
             >
               {/* Avatar del rol */}
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: colors.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ color: colors.text, fontFamily: 'var(--zs-font-display)', fontSize: 20, fontWeight: 700 }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12, background: colors.bg,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <span style={{ color: colors.text, fontFamily: 'var(--zs-font-display)', fontSize: 20 }}>
                   {ROLE_LABELS[role][0]}
                 </span>
               </div>
 
               {/* Info */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <span style={{ fontFamily: 'var(--zs-font-mono)', fontWeight: 700, fontSize: 15, color: 'var(--zs-ink)' }}>
                     {ROLE_LABELS[role]}
                   </span>
                   {!editable && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 3, background: '#F0F4F0', borderRadius: 5, padding: '1px 6px', fontFamily: 'var(--zs-font-mono)', fontSize: 10, color: 'var(--zs-mute)' }}>
+                    <span style={{
+                      display: 'flex', alignItems: 'center', gap: 3,
+                      background: 'var(--zs-paper)', borderRadius: 5, padding: '1px 7px',
+                      fontFamily: 'var(--zs-font-mono)', fontSize: 10, color: 'var(--zs-mute)',
+                      border: '1px solid var(--zs-line)',
+                    }}>
                       <FiLock size={9} /> Fijo
                     </span>
                   )}
                 </div>
-                {/* Barra de progreso de accesos */}
+                {/* Barra de progreso */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ flex: 1, height: 4, borderRadius: 2, background: '#E8EDE8', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${(allowedCount / ROUTES.length) * 100}%`, background: colors.bg, borderRadius: 2, transition: 'width 0.3s' }} />
+                  <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'var(--zs-line)', overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${(allowedCount / ROUTES.length) * 100}%`,
+                      background: colors.bg,
+                      borderRadius: 2, transition: 'width 0.3s',
+                    }} />
                   </div>
                   <span style={{ fontFamily: 'var(--zs-font-mono)', fontSize: 11, color: 'var(--zs-mute)', flexShrink: 0 }}>
-                    {allowedCount}/{ROUTES.length} módulos
+                    {allowedCount}/{ROUTES.length}
                   </span>
                 </div>
               </div>
@@ -254,6 +300,10 @@ export default function PermissionsPanel() {
           );
         })}
       </div>
+
+      <p style={{ fontFamily: 'var(--zs-font-mono)', fontSize: 11, color: 'var(--zs-mute)', marginTop: 16, textAlign: 'center' }}>
+        Los roles marcados como <strong>Fijo</strong> tienen acceso total y no se pueden modificar.
+      </p>
     </div>
   );
 }

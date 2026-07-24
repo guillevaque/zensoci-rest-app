@@ -11,14 +11,14 @@ require_once __DIR__ . '/../config.php';
 startSession();
 if (empty($_SESSION['user_id'])) jsonError(401, 'No autenticado');
 
-$pdo      = getPDO();
-$myRole   = $_SESSION['user_role'] ?? '';
-$method   = $_SERVER['REQUEST_METHOD'];
+$pdo        = getPDO();
+$myRole     = $_SESSION['user_role'] ?? '';
+$method     = $_SERVER['REQUEST_METHOD'];
+$isTopAdmin = in_array($myRole, ['admin', 'manager'], true);
 
 if ($method === 'GET') {
     if (!empty($_GET['all'])) {
-        // Solo manager puede ver todos los permisos
-        if ($myRole !== 'manager') jsonError(403, 'Sin permisos');
+        if (!$isTopAdmin) jsonError(403, 'Sin permisos');
 
         $rows = $pdo->query("SELECT role, route, allowed FROM role_permissions ORDER BY role, route")
                     ->fetchAll();
@@ -39,14 +39,14 @@ if ($method === 'GET') {
 }
 
 if ($method === 'PUT') {
-    if ($myRole !== 'manager') jsonError(403, 'Sin permisos');
+    if (!$isTopAdmin) jsonError(403, 'Sin permisos');
 
     $body    = json_decode(file_get_contents('php://input'), true) ?? [];
     $role    = trim($body['role']    ?? '');
     $route   = trim($body['route']   ?? '');
     $allowed = isset($body['allowed']) ? (int)(bool)$body['allowed'] : null;
 
-    $validRoles  = ['manager', 'staff', 'contador'];
+    $validRoles  = ['admin', 'manager', 'gerente', 'mesero', 'cocina', 'caja', 'contador', 'staff'];
     $validRoutes = ['/dashboard','/mesas','/pedidos','/menu','/inventario',
                     '/reportes','/costeo','/personal','/ajustes'];
 
@@ -54,8 +54,9 @@ if ($method === 'PUT') {
     if (!in_array($route, $validRoutes, true)) jsonError(400, 'Ruta inválida');
     if ($allowed === null)                     jsonError(400, 'Campo allowed requerido');
 
-    // manager siempre tiene acceso total — no se puede revocar
-    if ($role === 'manager') jsonError(400, 'Los permisos de manager no se pueden modificar');
+    // admin y manager tienen acceso total — no se puede revocar
+    if (in_array($role, ['admin', 'manager'], true))
+        jsonError(400, 'Los permisos de admin y manager no se pueden modificar');
 
     $pdo->prepare("
         INSERT INTO role_permissions (role, route, allowed)

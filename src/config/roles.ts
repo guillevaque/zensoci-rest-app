@@ -4,28 +4,41 @@
  * Para cambiar permisos de una ruta: edita solo ROUTE_ROLES.
  */
 
-export type AppRole = 'manager' | 'staff' | 'contador';
+export type AppRole =
+  | 'admin'
+  | 'manager'
+  | 'gerente'
+  | 'mesero'
+  | 'cocina'
+  | 'caja'
+  | 'contador'
+  | 'staff';
 
 export const ROLE_LABELS: Record<AppRole, string> = {
-  manager:  'Gerente',
+  admin:    'Administrador',
+  manager:  'Manager',
+  gerente:  'Gerente',
+  mesero:   'Mesero',
+  cocina:   'Cocina',
+  caja:     'Caja',
+  contador: 'Contador',
   staff:    'Personal',
-  contador: 'Contabilidad',
 };
 
 /**
- * Qué roles pueden acceder a cada ruta.
- * Una ruta sin entrada es accesible para cualquier usuario autenticado.
+ * Permisos por defecto (fallback si la API no responde).
+ * La fuente de verdad real está en role_permissions en DB.
  */
 export const ROUTE_ROLES: Record<string, AppRole[]> = {
-  '/dashboard':  ['manager', 'staff', 'contador'],
-  '/mesas':      ['manager', 'staff'],
-  '/pedidos':    ['manager', 'staff'],
-  '/menu':       ['manager', 'staff'],
-  '/inventario': ['manager', 'contador'],
-  '/reportes':   ['manager', 'contador'],
-  '/costeo':     ['manager', 'contador'],
-  '/personal':   ['manager'],
-  '/ajustes':    ['manager'],
+  '/dashboard':  ['admin', 'manager', 'gerente', 'mesero', 'cocina', 'caja', 'contador', 'staff'],
+  '/mesas':      ['admin', 'manager', 'gerente', 'mesero', 'caja', 'staff'],
+  '/pedidos':    ['admin', 'manager', 'gerente', 'mesero', 'cocina', 'caja', 'staff'],
+  '/menu':       ['admin', 'manager', 'gerente', 'mesero', 'staff'],
+  '/inventario': ['admin', 'manager', 'gerente', 'contador'],
+  '/reportes':   ['admin', 'manager', 'gerente', 'caja', 'contador'],
+  '/costeo':     ['admin', 'manager', 'gerente', 'contador'],
+  '/personal':   ['admin', 'manager', 'gerente'],
+  '/ajustes':    ['admin', 'manager'],
 };
 
 export function canAccess(role: string | undefined, route: string): boolean {
