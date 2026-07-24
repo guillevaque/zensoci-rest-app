@@ -5,7 +5,7 @@ import {
   FiBarChart2, FiUsers, FiSettings, FiLogOut, FiDollarSign,
 } from 'react-icons/fi';
 import { useAuth } from '../auth/AuthContext';
-import { canAccess, ROLE_LABELS, type AppRole } from '../config/roles';
+import { ROLE_LABELS, type AppRole } from '../config/roles';
 
 type SidebarProps = { onNavigate?: () => void };
 
@@ -58,12 +58,12 @@ function NavItem({ item, onNavigate }: { item: (typeof NAV)[0] & { badge?: numbe
 }
 
 export default function Sidebar({ onNavigate }: SidebarProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, canAccess } = useAuth();
   const role = user?.role as string | undefined;
   const avatarColor = COLORS[(Number((user as any)?.id ?? 0)) % COLORS.length];
 
-  const visibleNav   = NAV.filter(i => canAccess(role, i.to));
-  const visibleAdmin = ADMIN.filter(i => canAccess(role, i.to));
+  const visibleNav   = NAV.filter(i => canAccess(i.to));
+  const visibleAdmin = ADMIN.filter(i => canAccess(i.to));
 
   return (
     <aside className="hidden md:flex flex-col fixed left-0 top-0 z-40 h-full"

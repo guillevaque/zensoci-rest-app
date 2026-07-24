@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import PermissionsPanel from './PermissionsPanel';
 
 const GROUPS = [
   { title: 'Restaurante', items: [
@@ -22,26 +23,60 @@ const GROUPS = [
   ]},
 ];
 
+const TABS = ['General', 'Permisos'];
+
 export function Settings() {
+  const [activeTab, setActiveTab] = useState('General');
+
   return (
-    /* 1 columna en móvil, 2 en desktop */
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-      {GROUPS.map(g => (
-        <div key={g.title} style={{ background: '#fff', border: '1px solid var(--zs-line)', borderRadius: 18, padding: '16px 18px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-            <h3 style={{ fontFamily: 'var(--zs-font-display)', fontSize: 18, color: 'var(--zs-green)', margin: 0 }}>{g.title}</h3>
-            <span style={{ fontFamily: 'var(--zs-font-mono)', fontSize: 12, color: 'var(--zs-accent2)', cursor: 'pointer' }}>Editar →</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {g.items.map((it, idx) => (
-              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: idx < g.items.length-1 ? '1px dashed var(--zs-line)' : 'none', fontFamily: 'var(--zs-font-mono)', fontSize: 13, gap: 8 }}>
-                <span style={{ color: 'var(--zs-mute)', flexShrink: 0 }}>{it.label}</span>
-                <span style={{ fontWeight: 700, textAlign: 'right' }}>{it.value}</span>
+    <div>
+      {/* Tab bar */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24, borderBottom: '1px solid var(--zs-line)', paddingBottom: 0 }}>
+        {TABS.map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontFamily: 'var(--zs-font-mono)', fontWeight: 700, fontSize: 14,
+              padding: '8px 16px 12px',
+              color: activeTab === tab ? 'var(--zs-green)' : 'var(--zs-mute)',
+              borderBottom: activeTab === tab ? '2px solid var(--zs-green)' : '2px solid transparent',
+              marginBottom: -1,
+              transition: 'color 0.15s',
+            }}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'General' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {GROUPS.map(g => (
+            <div key={g.title} style={{ background: '#fff', border: '1px solid var(--zs-line)', borderRadius: 18, padding: '16px 18px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+                <h3 style={{ fontFamily: 'var(--zs-font-display)', fontSize: 18, color: 'var(--zs-green)', margin: 0 }}>{g.title}</h3>
+                <span style={{ fontFamily: 'var(--zs-font-mono)', fontSize: 12, color: 'var(--zs-accent2)', cursor: 'pointer' }}>Editar →</span>
               </div>
-            ))}
-          </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {g.items.map((it, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: idx < g.items.length-1 ? '1px dashed var(--zs-line)' : 'none', fontFamily: 'var(--zs-font-mono)', fontSize: 13, gap: 8 }}>
+                    <span style={{ color: 'var(--zs-mute)', flexShrink: 0 }}>{it.label}</span>
+                    <span style={{ fontWeight: 700, textAlign: 'right' }}>{it.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
+
+      {activeTab === 'Permisos' && (
+        <div style={{ background: '#fff', border: '1px solid var(--zs-line)', borderRadius: 18, padding: '20px 24px' }}>
+          <PermissionsPanel />
+        </div>
+      )}
     </div>
   );
 }

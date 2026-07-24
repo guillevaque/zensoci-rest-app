@@ -6,7 +6,7 @@ import {
   MdAttachMoney,
 } from 'react-icons/md';
 import { useAuth } from '../auth/AuthContext';
-import { canAccess, ROLE_LABELS, type AppRole } from '../config/roles';
+import { ROLE_LABELS, type AppRole } from '../config/roles';
 
 type Props = { open: boolean; onClose: () => void };
 
@@ -30,14 +30,14 @@ const IDLE_STYLE   = { color: 'rgba(255,255,255,0.72)' };
 const COLORS = ['#D86835','#3C6030','#5B8C3A','#C0392B','#2C3E50','#E07B54'];
 
 export default function MobileDrawer({ open, onClose }: Props) {
-  const { user, logout } = useAuth();
+  const { user, logout, canAccess } = useAuth();
   const role = user?.role as string | undefined;
   const avatarColor = COLORS[(Number((user as any)?.id ?? 0)) % COLORS.length];
 
   if (!open) return null;
 
-  const visibleOperation = OPERATION.filter(i => canAccess(role, i.to));
-  const visibleAdmin     = ADMIN.filter(i => canAccess(role, i.to));
+  const visibleOperation = OPERATION.filter(i => canAccess(i.to));
+  const visibleAdmin     = ADMIN.filter(i => canAccess(i.to));
 
   const handleLogout = () => {
     onClose();

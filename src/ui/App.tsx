@@ -15,9 +15,6 @@ import Personal   from '../pages/Personal'
 import { Settings }     from '../pages/Settings'
 import { Costeo }      from '../pages/Costeo'
 
-const MANAGER            = ['manager']             as const;
-const MANAGER_CONTADOR   = ['manager', 'contador'] as const;
-
 export function App() {
   return (
     <AuthProvider>
@@ -33,25 +30,21 @@ export function App() {
             </ProtectedRoute>
           }
         >
-          <Route index                element={<Navigate to="/dashboard" replace />} />
+          <Route index element={<Navigate to="/dashboard" replace />} />
 
-          {/* Accessible to all authenticated roles */}
-          <Route path="/dashboard"   element={<Dashboard />} />
-          <Route path="/mesas"        element={<GestionMesas />} />
-          <Route path="/pedidos"      element={<Pedidos />} />
-          <Route path="/menu"         element={<GestionMenu />} />
-
-          {/* Manager + Contador */}
-          <Route path="/inventario"   element={<ProtectedRoute roles={MANAGER_CONTADOR}><Inventory /></ProtectedRoute>} />
-          <Route path="/reportes"     element={<ProtectedRoute roles={MANAGER_CONTADOR}><Reports /></ProtectedRoute>} />
-          <Route path="/costeo"       element={<ProtectedRoute roles={MANAGER_CONTADOR}><Costeo /></ProtectedRoute>} />
-
-          {/* Manager only */}
-          <Route path="/personal"     element={<ProtectedRoute roles={MANAGER}><Personal /></ProtectedRoute>} />
-          <Route path="/ajustes"      element={<ProtectedRoute roles={MANAGER}><Settings /></ProtectedRoute>} />
+          {/* Cada ruta protegida por sus permisos dinámicos del servidor */}
+          <Route path="/dashboard"  element={<ProtectedRoute route="/dashboard"><Dashboard /></ProtectedRoute>} />
+          <Route path="/mesas"      element={<ProtectedRoute route="/mesas"><GestionMesas /></ProtectedRoute>} />
+          <Route path="/pedidos"    element={<ProtectedRoute route="/pedidos"><Pedidos /></ProtectedRoute>} />
+          <Route path="/menu"       element={<ProtectedRoute route="/menu"><GestionMenu /></ProtectedRoute>} />
+          <Route path="/inventario" element={<ProtectedRoute route="/inventario"><Inventory /></ProtectedRoute>} />
+          <Route path="/reportes"   element={<ProtectedRoute route="/reportes"><Reports /></ProtectedRoute>} />
+          <Route path="/costeo"     element={<ProtectedRoute route="/costeo"><Costeo /></ProtectedRoute>} />
+          <Route path="/personal"   element={<ProtectedRoute route="/personal"><Personal /></ProtectedRoute>} />
+          <Route path="/ajustes"    element={<ProtectedRoute route="/ajustes"><Settings /></ProtectedRoute>} />
 
           {/* Legacy redirect */}
-          <Route path="/pos"          element={<Navigate to="/pedidos" replace />} />
+          <Route path="/pos" element={<Navigate to="/pedidos" replace />} />
         </Route>
 
         {/* 404 */}
