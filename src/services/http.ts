@@ -48,6 +48,14 @@ export const http = {
       body: body ? JSON.stringify(body) : undefined,
     }).then(parseResponse),
 
+  patch: (path: string, body?: unknown) =>
+    fetch(`${API_BASE}${path}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: body ? { 'Content-Type': 'application/json' } : {},
+      body: body ? JSON.stringify(body) : undefined,
+    }).then(parseResponse),
+
   delete: (path: string) =>
     fetch(`${API_BASE}${path}`, { method: 'DELETE', credentials: 'include' })
       .then(parseResponse),

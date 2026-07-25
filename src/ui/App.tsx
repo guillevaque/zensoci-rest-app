@@ -18,6 +18,7 @@ import { Costeo }      from '../pages/Costeo'
 import FacturasClientesPage from '../pages/facturacion/FacturasClientesPage'
 import NuevaFacturaPage     from '../pages/facturacion/NuevaFacturaPage'
 import BillingPlaceholder   from '../pages/facturacion/BillingPlaceholder'
+import ClientesPage         from '../pages/facturacion/ClientesPage'
 
 const Guard = ({ route, children }: { route: string; children: React.ReactNode }) => (
   <ProtectedRoute route={route}>{children}</ProtectedRoute>
@@ -61,7 +62,7 @@ export function App() {
           <Route path="/facturacion/clientes/productos"
             element={<Guard route="/facturacion/clientes"><BillingPlaceholder title="Productos" /></Guard>} />
           <Route path="/facturacion/clientes/clientes"
-            element={<Guard route="/facturacion/clientes"><BillingPlaceholder title="Clientes" /></Guard>} />
+            element={<Guard route="/facturacion/clientes"><ClientesPage /></Guard>} />
 
           {/* ── Facturación / Contabilidad — Proveedores ── */}
           <Route path="/facturacion/proveedores/facturas"

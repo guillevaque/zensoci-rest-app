@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PermissionsPanel from './PermissionsPanel';
+import FiscalConfigPanel from './ajustes/FiscalConfigPanel';
 
 const GROUPS = [
   { title: 'Restaurante', items: [
@@ -23,7 +24,7 @@ const GROUPS = [
   ]},
 ];
 
-const TABS = ['General', 'Permisos'];
+const TABS = ['General', 'Permisos', 'Facturación'];
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState('General');
@@ -75,6 +76,12 @@ export function Settings() {
       {activeTab === 'Permisos' && (
         <div style={{ background: '#fff', border: '1px solid var(--zs-line)', borderRadius: 18, padding: '20px 24px' }}>
           <PermissionsPanel />
+        </div>
+      )}
+
+      {activeTab === 'Facturación' && (
+        <div style={{ background: '#fff', border: '1px solid var(--zs-line)', borderRadius: 18, padding: '20px 24px' }}>
+          <FiscalConfigPanel />
         </div>
       )}
     </div>
