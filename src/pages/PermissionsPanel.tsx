@@ -4,7 +4,7 @@ import { useAllPermissions } from '../hooks/usePermissions';
 import { useAuth } from '../auth/AuthContext';
 import { ROLE_LABELS, type AppRole } from '../config/roles';
 
-const ROUTES: { route: string; label: string; icon: string }[] = [
+const ROUTES: { route: string; label: string; icon: string; group?: string }[] = [
   { route: '/dashboard',  label: 'Dashboard',     icon: '⊞' },
   { route: '/mesas',      label: 'Mesas',          icon: '⬡' },
   { route: '/pedidos',    label: 'Pedidos',        icon: '≡' },
@@ -14,6 +14,10 @@ const ROUTES: { route: string; label: string; icon: string }[] = [
   { route: '/costeo',     label: 'Costeo',         icon: '$' },
   { route: '/personal',   label: 'Personal',       icon: '⊕' },
   { route: '/ajustes',    label: 'Configuración',  icon: '⚙' },
+  // Facturación / Contabilidad
+  { route: '/facturacion/clientes',    label: 'Clientes',    icon: '♟', group: 'Facturación / Contabilidad' },
+  { route: '/facturacion/proveedores', label: 'Proveedores', icon: '⊡', group: 'Facturación / Contabilidad' },
+  { route: '/facturacion/informes',    label: 'Informes',    icon: '⊛', group: 'Facturación / Contabilidad' },
 ];
 
 const ALL_ROLES: { role: AppRole; editable: boolean }[] = [
