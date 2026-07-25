@@ -19,6 +19,9 @@ import FacturasClientesPage from '../pages/facturacion/FacturasClientesPage'
 import NuevaFacturaPage     from '../pages/facturacion/NuevaFacturaPage'
 import BillingPlaceholder   from '../pages/facturacion/BillingPlaceholder'
 import ClientesPage         from '../pages/facturacion/ClientesPage'
+import VentasPage           from '../pages/facturacion/VentasPage'
+import NuevaVentaPage       from '../pages/facturacion/NuevaVentaPage'
+import VentaDetallePage     from '../pages/facturacion/VentaDetallePage'
 
 const Guard = ({ route, children }: { route: string; children: React.ReactNode }) => (
   <ProtectedRoute route={route}>{children}</ProtectedRoute>
@@ -47,6 +50,14 @@ export function App() {
           <Route path="/costeo"     element={<Guard route="/costeo"><Costeo /></Guard>} />
           <Route path="/personal"   element={<Guard route="/personal"><Personal /></Guard>} />
           <Route path="/ajustes"    element={<Guard route="/ajustes"><Settings /></Guard>} />
+
+          {/* ── Facturación / Contabilidad — Ventas ── */}
+          <Route path="/facturacion/ventas/nueva"
+            element={<Guard route="/facturacion/clientes"><NuevaVentaPage /></Guard>} />
+          <Route path="/facturacion/ventas/:id"
+            element={<Guard route="/facturacion/clientes"><VentaDetallePage /></Guard>} />
+          <Route path="/facturacion/ventas"
+            element={<Guard route="/facturacion/clientes"><VentasPage /></Guard>} />
 
           {/* ── Facturación / Contabilidad — Clientes ── */}
           <Route path="/facturacion/clientes/facturas/nueva"
