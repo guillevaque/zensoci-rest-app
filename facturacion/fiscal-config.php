@@ -15,7 +15,7 @@ startSession();
 if (empty($_SESSION['user_id'])) jsonError(401, 'No autenticado');
 
 $myRole = $_SESSION['user_role'] ?? '';
-if (!in_array($myRole, ['admin', 'contador'], true)) jsonError(403, 'Sin permisos');
+if (!in_array($myRole, ['admin', 'manager', 'contador'], true)) jsonError(403, 'Sin permisos');
 
 $pdo    = getPDO();
 $myId   = (int)$_SESSION['user_id'];
