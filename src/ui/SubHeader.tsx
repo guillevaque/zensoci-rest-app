@@ -15,6 +15,7 @@ const TITLES: Record<string, string> = {
   '/personal':   'Personal',
   '/ajustes':    'Configuración',
   // Facturación — Clientes
+  '/facturacion/clientes/facturas/nueva':          'Nueva Factura',
   '/facturacion/clientes/facturas':                'Facturas',
   '/facturacion/clientes/facturas-rectificativas': 'Facturas Rectificativas',
   '/facturacion/clientes/contingencias':           'Contingencias',

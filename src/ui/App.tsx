@@ -16,6 +16,7 @@ import { Settings }     from '../pages/Settings'
 import { Costeo }      from '../pages/Costeo'
 
 import FacturasClientesPage from '../pages/facturacion/FacturasClientesPage'
+import NuevaFacturaPage     from '../pages/facturacion/NuevaFacturaPage'
 import BillingPlaceholder   from '../pages/facturacion/BillingPlaceholder'
 
 const Guard = ({ route, children }: { route: string; children: React.ReactNode }) => (
@@ -47,6 +48,8 @@ export function App() {
           <Route path="/ajustes"    element={<Guard route="/ajustes"><Settings /></Guard>} />
 
           {/* ── Facturación / Contabilidad — Clientes ── */}
+          <Route path="/facturacion/clientes/facturas/nueva"
+            element={<Guard route="/facturacion/clientes"><NuevaFacturaPage /></Guard>} />
           <Route path="/facturacion/clientes/facturas"
             element={<Guard route="/facturacion/clientes"><FacturasClientesPage /></Guard>} />
           <Route path="/facturacion/clientes/facturas-rectificativas"

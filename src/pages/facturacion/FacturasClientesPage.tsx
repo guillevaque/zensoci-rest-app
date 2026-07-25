@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FiPlus, FiUpload, FiSearch, FiList, FiGrid,
   FiClock, FiChevronLeft, FiChevronRight, FiFilter,
@@ -121,6 +122,7 @@ const TD: React.CSSProperties = {
 };
 
 export default function FacturasClientesPage() {
+  const navigate                    = useNavigate();
   const [selected, setSelected]     = useState<number[]>([]);
   const [search, setSearch]         = useState('');
 
@@ -147,7 +149,11 @@ export default function FacturasClientesPage() {
         padding: '12px 20px', borderBottom: '1px solid var(--zs-line)',
         background: 'var(--zs-cream)', flexShrink: 0,
       }}>
-        <button className="btn btn-primary" style={{ gap: 6, paddingLeft: 14, paddingRight: 16 }}>
+        <button
+          className="btn btn-primary"
+          onClick={() => navigate('/facturacion/clientes/facturas/nueva')}
+          style={{ gap: 6, paddingLeft: 14, paddingRight: 16 }}
+        >
           <FiPlus size={15} /> Nuevo
         </button>
         <button className="btn btn-secondary" style={{ gap: 6 }}>
