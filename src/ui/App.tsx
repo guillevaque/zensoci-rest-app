@@ -18,6 +18,8 @@ import { Costeo }      from '../pages/Costeo'
 import FacturasClientesPage from '../pages/facturacion/FacturasClientesPage'
 import NuevaFacturaPage     from '../pages/facturacion/NuevaFacturaPage'
 import BillingPlaceholder   from '../pages/facturacion/BillingPlaceholder'
+// Página de prueba temporal — revertir cuando no se necesite
+import FirmadorTestPage from '../pages/facturacion/FirmadorTestPage'
 
 const Guard = ({ route, children }: { route: string; children: React.ReactNode }) => (
   <ProtectedRoute route={route}>{children}</ProtectedRoute>
@@ -27,6 +29,9 @@ export function App() {
   return (
     <AuthProvider>
       <Routes>
+        {/* Prueba temporal Firmador — solo dev, revertir después */}
+        <Route path="/firmador-test" element={<FirmadorTestPage />} />
+
         {/* Public */}
         <Route path="/login" element={<Login />} />
 

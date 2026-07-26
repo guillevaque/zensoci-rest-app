@@ -23,6 +23,14 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
       },
+      // Proxy temporal para probar el Firmador Docker directo desde el browser.
+      // Solo aplica en "npm run dev". No existe en el build de producción.
+      // Revertir cuando no se necesite: eliminar este bloque.
+      '/firmador-local': {
+        target: 'http://localhost:8113',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/firmador-local/, ''),
+      },
     },
   },
 })
