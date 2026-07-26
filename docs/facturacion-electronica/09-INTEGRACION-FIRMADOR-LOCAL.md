@@ -210,30 +210,128 @@ Esto confirma que el Firmador está funcionando y rechaza de forma controlada.
 
 ---
 
-## Prueba PHP directa
+## Prueba directa por PHP CLI
 
-```php
-require_once 'facturacion/firmador/FirmadorException.php';
-require_once 'facturacion/firmador/FirmadorClient.php';
+El script `scripts/test-firmador-local.php` valida la integración completa:
 
-putenv('DTE_FIRMADOR_URL=http://localhost:8113');
-putenv('DTE_FIRMADOR_TIMEOUT_SECONDS=8');
-
-$client = new FirmadorClient();
-
-// Test 1: health check
-$health = $client->healthCheck();
-var_dump($health);
-// ['available' => true, 'message' => 'Application is running...!!', 'latency_ms' => 12]
-
-// Test 2: sign (error controlado esperado sin certificado)
-try {
-    $result = $client->sign(['identificacion' => []], '00000000000000', 'test123');
-} catch (FirmadorException $e) {
-    echo 'Error controlado: ' . $e->getMessage() . PHP_EOL;
-    var_dump($e->getFirmadorResponse());
-}
 ```
+PHP CLI
+  → FirmadorClient (reutiliza las clases existentes)
+    → Docker Firmador en localhost:8113
+```
+
+No requiere Hostinger, ngrok, sesión web ni certificado real.
+
+### Requisito previo
+
+El Firmador Docker debe estar corriendo:
+
+```bash
+docker run -d -p 8113:8113 svfe/svfe-api-firmador:v20260316
+# o con compose:
+docker compose -f infra/firmador/docker-compose.example.yml up -d
+
+# Verificar:
+curl http://localhost:8113/firmardocumento/status
+```
+
+### Comando de ejecución
+
+Desde la **raíz del repositorio**:
+
+```bash
+# Linux / macOS / Git Bash
+php scripts/test-firmador-local.php
+
+# Windows (CMD o PowerShell, si PHP está en PATH)
+php scripts\test-firmador-local.php
+
+# Windows (PHP de XAMPP no en PATH)
+C:\xampp\php\php.exe scripts\test-firmador-local.php
+
+# Windows (PHP de Laragon)
+C:\laragon\bin\php\php-8.x.x-Win32-vs16-x64\php.exe scripts\test-firmador-local.php
+```
+
+### Salida esperada (Firmador corriendo)
+
+```
+─────────────────────────────────────────────
+ Prueba local: FirmadorClient → Docker :8113 
+─────────────────────────────────────────────
+
+[1] GET /firmardocumento/status
+healthCheck: {"available":true,"message":"Application is running...!!","latency_ms":12}
+
+[2] POST /firmardocumento/
+    (NIT de prueba, sin certificado real — error esperado)
+POST llegó al Firmador.
+Resultado esperado sin certificado: El certificado no existe o la contraseña es incorrecta
+Respuesta del Firmador: {"status":"ERROR","descripcionMsg":"El certificado no existe o la contraseña es incorrecta"}
+
+─────────────────────────────────────────────
+ OK — Integración PHP ↔ Firmador validada   
+ No se transmitió al Ministerio de Hacienda  
+─────────────────────────────────────────────
+```
+
+### Salida cuando el Firmador no está corriendo
+
+```
+[1] GET /firmardocumento/status
+healthCheck: {"available":false,"message":"No se pudo conectar con el Firmador","latency_ms":1}
+
+ERROR: Firmador no disponible — No se pudo conectar con el Firmador
+Verifica que el contenedor esté corriendo:
+  docker ps | grep firmador
+  curl http://localhost:8113/firmardocumento/status
+```
+
+### Códigos de salida
+
+| Código | Significado |
+|--------|-------------|
+| `0` | healthCheck OK y POST llegó al Firmador (error de certificado es correcto) |
+| `1` | Firmador no disponible — Docker no está corriendo o URL incorrecta |
+| `2` | Error inesperado de PHP, cURL o configuración |
+
+### Por qué `status: ERROR` es el resultado correcto
+
+El Firmador rechaza el POST porque no hay un certificado `.p12` válido en `/uploads`.
+Eso confirma que:
+1. PHP alcanzó el Docker
+2. El Docker procesó la petición
+3. El protocolo de firma funciona
+4. `FirmadorClient` interpreta correctamente el `status: ERROR` con HTTP 200
+
+No se firmó ningún documento. No se transmitió nada al Ministerio de Hacienda.
+
+### Nota sobre localhost
+
+`localhost:8113` funciona **solo cuando PHP y Docker corren en la misma máquina**.
+
+| Contexto | URL |
+|---|---|
+| PHP en tu máquina + Docker en tu máquina | `http://localhost:8113` |
+| PHP en contenedor Docker + Firmador en otro contenedor | `http://host.docker.internal:8113` |
+| PHP en Hostinger + Firmador en tu máquina | **Imposible** — redes distintas |
+| PHP en Hostinger + Firmador en VPS | `http://IP_PRIVADA_VPS:8113` |
+
+### Sustitución futura (producción en VPS)
+
+Cuando el Firmador esté en un VPS propio, solo cambia la variable de entorno:
+
+```
+# Antes (local):
+DTE_FIRMADOR_URL=http://localhost:8113
+
+# Después (VPS con IP privada o dominio interno):
+DTE_FIRMADOR_URL=http://192.168.1.100:8113
+# o
+DTE_FIRMADOR_URL=http://firmador.internal:8113
+```
+
+No se modifica ningún código — solo la configuración.
 
 ---
 
