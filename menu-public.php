@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 // ── Consulta ───────────────────────────────────────────────────────────────
 try {
     $pdo  = getPDO();
+    $pdo->exec('SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci');
     $stmt = $pdo->query(
         'SELECT id,
                 name        AS nombre,

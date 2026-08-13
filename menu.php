@@ -14,6 +14,7 @@ $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
 try {
     $pdo = getPDO();
+    $pdo->exec('SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci');
 
     // —— GET ——————————————————————————————————————————————————————————————
     if ($method === 'GET') {
