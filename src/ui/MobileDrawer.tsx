@@ -13,8 +13,6 @@ type Props = { open: boolean; onClose: () => void };
 
 const OPERATION = [
   { to: '/dashboard',  icon: <MdDashboard size={18} />,        label: 'Dashboard' },
-  { to: '/mesas',      icon: <MdTableBar size={18} />,          label: 'Mesas' },
-  { to: '/pedidos',    icon: <MdReceipt size={18} />,           label: 'Pedidos' },
   { to: '/menu',       icon: <MdMenuBook size={18} />,          label: 'Menú' },
   { to: '/inventario', icon: <MdOutlineInventory2 size={18} />, label: 'Inventario' },
 ];
@@ -182,6 +180,18 @@ export default function MobileDrawer({ open, onClose }: Props) {
   const visibleAdmin     = ADMIN.filter(i => canAccess(i.to));
   const visibleBilling   = BILLING.filter(g => canAccess(g.permRoute));
 
+  const posChildren: NavChild[] = [
+    ...(canAccess('/mesas')   ? [{ to: '/mesas',   label: 'Mesas' }]   : []),
+    ...(canAccess('/pedidos') ? [{ to: '/pedidos', label: 'Pedidos' }] : []),
+  ];
+  const posGroup: NavGroupDef = {
+    id: 'punto-de-venta',
+    permRoute: '/mesas',
+    icon: <MdTableBar size={18} />,
+    label: 'Punto de Venta',
+    children: posChildren,
+  };
+
   const handleLogout = () => { onClose(); logout(); };
 
   return (
@@ -218,7 +228,17 @@ export default function MobileDrawer({ open, onClose }: Props) {
         {/* Nav */}
         <nav className="flex-1 px-2 overflow-y-auto" style={{ paddingBottom: 8 }}>
           <SectionLabel>Operación</SectionLabel>
-          {visibleOperation.map(item => (
+          {visibleOperation.filter(i => i.to === '/dashboard').map(item => (
+            <NavLink
+              key={item.to} to={item.to} onClick={onClose}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
+              style={({ isActive }) => isActive ? ACTIVE_STYLE : IDLE_STYLE}
+            >
+              {item.icon}<span>{item.label}</span>
+            </NavLink>
+          ))}
+          {posChildren.length > 0 && <MobileNavGroup group={posGroup} onClose={onClose} />}
+          {visibleOperation.filter(i => i.to !== '/dashboard').map(item => (
             <NavLink
               key={item.to} to={item.to} onClick={onClose}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"

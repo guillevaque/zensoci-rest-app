@@ -15,8 +15,6 @@ type FlatItem = { to: string; icon: React.ReactNode; label: string; badge?: numb
 
 const NAV: FlatItem[] = [
   { to: '/dashboard',  icon: React.createElement(FiGrid,     { size: 18 }), label: 'Dashboard' },
-  { to: '/mesas',      icon: React.createElement(FiCoffee,   { size: 18 }), label: 'Mesas' },
-  { to: '/pedidos',    icon: React.createElement(FiFileText, { size: 18 }), label: 'Pedidos', badge: 3 },
   { to: '/menu',       icon: React.createElement(FiBookOpen, { size: 18 }), label: 'Menú' },
   { to: '/inventario', icon: React.createElement(FiPackage,  { size: 18 }), label: 'Inventario' },
 ];
@@ -224,6 +222,18 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   const visibleAdmin   = ADMIN.filter(i => canAccess(i.to));
   const visibleBilling = BILLING.filter(g => canAccess(g.permRoute));
 
+  const posChildren: NavChild[] = [
+    ...(canAccess('/mesas')   ? [{ to: '/mesas',   label: 'Mesas' }]   : []),
+    ...(canAccess('/pedidos') ? [{ to: '/pedidos', label: 'Pedidos' }] : []),
+  ];
+  const posGroup: NavGroupDef = {
+    id: 'punto-de-venta',
+    permRoute: '/mesas',
+    icon: React.createElement(FiCoffee, { size: 18 }),
+    label: 'Punto de Venta',
+    children: posChildren,
+  };
+
   return (
     <aside
       className="hidden md:flex flex-col fixed left-0 top-0 z-40 h-full"
@@ -241,7 +251,13 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       {/* Navigation */}
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, overflowY: 'auto' }}>
         <div style={SECTION}>Operación</div>
-        {visibleNav.map(i => <NavItem key={i.to} item={i} onNavigate={onNavigate} />)}
+        {visibleNav.filter(i => i.to === '/dashboard').map(i => (
+          <NavItem key={i.to} item={i} onNavigate={onNavigate} />
+        ))}
+        {posChildren.length > 0 && <NavGroup group={posGroup} onNavigate={onNavigate} />}
+        {visibleNav.filter(i => i.to !== '/dashboard').map(i => (
+          <NavItem key={i.to} item={i} onNavigate={onNavigate} />
+        ))}
 
         {visibleAdmin.length > 0 && (
           <>
