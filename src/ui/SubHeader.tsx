@@ -62,7 +62,7 @@ export default function SubHeader({ onToggleMobile }: Props) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <button
-          className="md:hidden flex"
+          className="lg:hidden flex"
           style={{ background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--zs-green)', padding: 4 }}
           onClick={onToggleMobile}
           aria-label="Abrir menú"

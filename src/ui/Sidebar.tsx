@@ -236,7 +236,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
 
   return (
     <aside
-      className="hidden md:flex flex-col fixed left-0 top-0 z-40 h-full"
+      className="hidden lg:flex flex-col fixed left-0 top-0 z-40 h-full"
       style={{ width: 220, background: 'var(--zs-green)', padding: '18px 14px' }}
     >
       {/* Logo */}
