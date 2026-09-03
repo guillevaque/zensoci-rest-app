@@ -31,12 +31,22 @@ type NavGroupDef = { id: string; permRoute: string; icon: React.ReactNode; label
 
 const BILLING: NavGroupDef[] = [
   {
+    id: 'ventas',
+    permRoute: '/facturacion/clientes',
+    icon: React.createElement(FiDollarSign, { size: 18 }),
+    label: 'Ventas',
+    children: [
+      { to: '/facturacion/ventas',       label: 'Mis ventas' },
+      { to: '/facturacion/ventas/nueva', label: 'Nueva venta' },
+    ],
+  },
+  {
     id: 'clientes',
     permRoute: '/facturacion/clientes',
     icon: React.createElement(FiUsers, { size: 18 }),
     label: 'Clientes',
     children: [
-      { to: '/facturacion/clientes/facturas',                label: 'Facturas' },
+      { to: '/facturacion/clientes/facturas',                label: 'Facturas DTE' },
       { to: '/facturacion/clientes/facturas-rectificativas', label: 'Facturas rectificativas' },
       { to: '/facturacion/clientes/contingencias',           label: 'Contingencias' },
       { to: '/facturacion/clientes/pagos',                   label: 'Pagos' },

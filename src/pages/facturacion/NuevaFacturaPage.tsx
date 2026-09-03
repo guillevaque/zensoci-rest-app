@@ -1,9 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FiSettings, FiRefreshCw, FiSave, FiPaperclip, FiPrinter,
-  FiEye, FiSend, FiPlus, FiTrash2, FiX, FiUsers, FiChevronRight,
+  FiEye, FiSend, FiPlus, FiTrash2, FiX, FiUsers, FiChevronRight, FiSearch,
 } from 'react-icons/fi';
+import { http } from '../../services/http';
+import type { Cliente } from '../../types/dte';
 
 // ── Types ─────────────────────────────────────────────────────────────────
 type InvoiceState = 'borrador' | 'publicado';
@@ -105,6 +107,144 @@ const CELL_INPUT: React.CSSProperties = {
   fontFamily: 'var(--zs-font-mono)', fontSize: 13, color: 'var(--zs-ink)',
   outline: 'none', background: '#fff', width: '100%', boxSizing: 'border-box',
 };
+
+// ── Cliente Autocomplete ──────────────────────────────────────────────────
+function ClienteAutocomplete({
+  value, onChange,
+}: {
+  value: string;
+  onChange: (nombre: string, id: number | null) => void;
+}) {
+  const [query,   setQuery]   = useState(value);
+  const [results, setResults] = useState<Cliente[]>([]);
+  const [open,    setOpen]    = useState(false);
+  const [loading, setLoading] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Sync external value changes (e.g. reset)
+  useEffect(() => { setQuery(value); }, [value]);
+
+  const search = useCallback(async (q: string) => {
+    if (!q.trim()) { setResults([]); return; }
+    setLoading(true);
+    try {
+      const res: any = await http.get(
+        `/facturacion/clientes.php?q=${encodeURIComponent(q)}&per_page=10&activo=1`
+      );
+      setResults(res.data ?? []);
+    } catch {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => { if (open) search(query); }, 250);
+    return () => clearTimeout(t);
+  }, [query, open, search]);
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const select = (c: Cliente) => {
+    setQuery(c.nombre);
+    onChange(c.nombre, c.id);
+    setOpen(false);
+  };
+
+  const handleFocus = () => {
+    setOpen(true);
+    if (!query) {
+      // load first page with no filter to show recent clients
+      setLoading(true);
+      http.get('/facturacion/clientes.php?per_page=10&activo=1')
+        .then((res: any) => setResults(res.data ?? []))
+        .catch(() => setResults([]))
+        .finally(() => setLoading(false));
+    }
+  };
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        border: '1px solid var(--zs-line)', borderRadius: 8,
+        padding: '7px 10px', background: '#fff',
+      }}>
+        <FiSearch size={13} color="var(--zs-mute)" style={{ flexShrink: 0 }} />
+        <input
+          value={query}
+          onChange={e => { setQuery(e.target.value); onChange(e.target.value, null); }}
+          onFocus={handleFocus}
+          placeholder="Buscar cliente…"
+          style={{
+            flex: 1, border: 'none', outline: 'none', background: 'transparent',
+            fontFamily: 'var(--zs-font-mono)', fontSize: 13, color: 'var(--zs-ink)',
+          }}
+        />
+        {query && (
+          <button
+            onClick={() => { setQuery(''); onChange('', null); setResults([]); }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
+          >
+            <FiX size={13} color="var(--zs-mute)" />
+          </button>
+        )}
+      </div>
+
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 500,
+          background: '#fff', border: '1px solid var(--zs-line)', borderRadius: 8,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)', marginTop: 4,
+          maxHeight: 260, overflowY: 'auto',
+        }}>
+          {loading && (
+            <div style={{ padding: '10px 14px', fontFamily: 'var(--zs-font-mono)', fontSize: 12, color: 'var(--zs-mute)' }}>
+              Buscando…
+            </div>
+          )}
+          {!loading && results.length === 0 && (
+            <div style={{ padding: '10px 14px', fontFamily: 'var(--zs-font-mono)', fontSize: 12, color: 'var(--zs-mute)' }}>
+              {query ? 'Sin resultados' : 'Sin clientes'}
+            </div>
+          )}
+          {results.map(c => (
+            <div
+              key={c.id}
+              onMouseDown={() => select(c)}
+              style={{
+                padding: '9px 14px', cursor: 'pointer',
+                borderBottom: '1px solid var(--zs-line)',
+                fontFamily: 'var(--zs-font-mono)',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--zs-cream)')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+            >
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--zs-ink)' }}>
+                {c.nombre}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--zs-mute)', marginTop: 1 }}>
+                {c.tipo_persona === 'J' ? 'Jurídica' : 'Natural'}
+                {c.nit ? ` · NIT: ${c.nit}` : ''}
+                {c.nrc ? ` · NRC: ${c.nrc}` : ''}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Split Bill Modal ──────────────────────────────────────────────────────
 function SplitBillModal({
@@ -334,6 +474,7 @@ export default function NuevaFacturaPage() {
 
   const [estado, setEstado]         = useState<InvoiceState>('borrador');
   const [cliente, setCliente]       = useState('');
+  const [clienteId, setClienteId]   = useState<number | null>(null);
   const [diario, setDiario]         = useState('');
   const [tipoDoc, setTipoDoc]       = useState('');
   const [referencia, setReferencia] = useState('');
@@ -466,7 +607,10 @@ export default function NuevaFacturaPage() {
           {/* Two-column form fields */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 36px', marginBottom: 28 }}>
             <Field label="Cliente">
-              <TextInput value={cliente} onChange={setCliente} placeholder="Seleccionar cliente…" />
+              <ClienteAutocomplete
+                value={cliente}
+                onChange={(nombre, id) => { setCliente(nombre); setClienteId(id); }}
+              />
             </Field>
             <Field label="Fecha de factura">
               <TextInput value={today} onChange={() => {}} readOnly />
