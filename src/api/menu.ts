@@ -1,5 +1,5 @@
 // src/api/menu.ts
-import { http, HTTP_API_BASE } from './http'
+import { http } from './http'
 
 export type MenuItem = {
   id: number;
@@ -10,10 +10,6 @@ export type MenuItem = {
   image_url?: string;
   activo?: number; // 1|0
 };
-
-// Deriva el origen del sitio desde la base de la API (ej. "https://app.zensoci.com/api" → "https://app.zensoci.com")
-// En dev con proxy, API_BASE es "/api", así que el origen es "" (mismo origen = localhost:5173)
-const SITE_ORIGIN = HTTP_API_BASE.replace(/\/api\/?$/, '').replace(/^\/api\/?$/, '');
 
 export const MenuAPI = {
   list: (params?: { q?:string; categoria?:string }) => {
@@ -34,11 +30,11 @@ export const MenuAPI = {
     fd.append('image', file);
     const res = await http.upload('/upload.php', fd) as { ok: boolean; path?: string; url?: string };
 
-    // El servidor devuelve "path" (relativo) — construimos la URL absoluta
+    // El servidor devuelve "path" con formato /assets/menu/<file>.
+    // Se almacena tal cual en la BD — sin dominio — para que cualquier
+    // consumidor construya la URL absoluta con su propio origen.
     const raw = res.path ?? res.url ?? '';
-    const url = raw.startsWith('http')
-      ? raw
-      : SITE_ORIGIN + (raw.startsWith('/') ? raw : '/' + raw);
+    const url = raw.startsWith('/') ? raw : '/' + raw;
 
     return { ok: true, url };
   },
