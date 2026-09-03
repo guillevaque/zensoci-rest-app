@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PermissionsPanel from './PermissionsPanel';
 import FiscalConfigPanel from './ajustes/FiscalConfigPanel';
+import FirmadorStatusPanel from './facturacion/FirmadorStatusPanel';
 
 const GROUPS = [
   { title: 'Restaurante', items: [
@@ -24,7 +25,7 @@ const GROUPS = [
   ]},
 ];
 
-const TABS = ['General', 'Permisos', 'Facturación'];
+const TABS = ['General', 'Permisos', 'Facturación', 'DTE'];
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState('General');
@@ -82,6 +83,12 @@ export function Settings() {
       {activeTab === 'Facturación' && (
         <div style={{ background: '#fff', border: '1px solid var(--zs-line)', borderRadius: 18, padding: '20px 24px' }}>
           <FiscalConfigPanel />
+        </div>
+      )}
+
+      {activeTab === 'DTE' && (
+        <div style={{ maxWidth: 560 }}>
+          <FirmadorStatusPanel />
         </div>
       )}
     </div>

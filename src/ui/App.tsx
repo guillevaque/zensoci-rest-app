@@ -22,6 +22,7 @@ import ClientesPage         from '../pages/facturacion/ClientesPage'
 import VentasPage           from '../pages/facturacion/VentasPage'
 import NuevaVentaPage       from '../pages/facturacion/NuevaVentaPage'
 import VentaDetallePage     from '../pages/facturacion/VentaDetallePage'
+import FirmadorTestPage     from '../pages/facturacion/FirmadorTestPage'
 
 const Guard = ({ route, children }: { route: string; children: React.ReactNode }) => (
   <ProtectedRoute route={route}>{children}</ProtectedRoute>
@@ -31,6 +32,9 @@ export function App() {
   return (
     <AuthProvider>
       <Routes>
+        {/* Prueba temporal Firmador — solo dev, revertir después */}
+        <Route path="/firmador-test" element={<FirmadorTestPage />} />
+
         {/* Public */}
         <Route path="/login" element={<Login />} />
 

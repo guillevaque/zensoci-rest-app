@@ -57,3 +57,8 @@ coverage/
 # Hostinger (si usas despliegue manual)
 public_html/
 uploads/
+
+# Firmador DTE — certificados locales (nunca subir al repo)
+infra/firmador/certificado/
+infra/firmador/svfe-api.env
+infra/firmador/docker-compose.yml

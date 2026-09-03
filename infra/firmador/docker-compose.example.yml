@@ -1,0 +1,29 @@
+# docker-compose.example.yml — Firmador DTE local (El Salvador)
+#
+# USO:
+#   cp docker-compose.example.yml docker-compose.yml
+#   cp svfe-api.env.example svfe-api.env   # completar con valores reales
+#   mkdir -p certificado                   # colocar aquí el archivo .p12
+#   docker compose up -d
+#
+# La carpeta certificado/ está en .gitignore — nunca commitear certificados.
+
+services:
+  firmador:
+    image: svfe/svfe-api-firmador:v20260316
+    container_name: zensoci-firmador
+    restart: unless-stopped
+    ports:
+      - "8113:8113"
+    env_file:
+      - svfe-api.env
+    volumes:
+      # Monta la carpeta local de certificados en /uploads dentro del contenedor.
+      # Colocar el archivo .p12 en ./certificado/ antes de levantar el servicio.
+      - ./certificado:/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8113/firmardocumento/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
